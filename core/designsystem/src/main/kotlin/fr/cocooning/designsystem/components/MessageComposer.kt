@@ -8,12 +8,15 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,55 +50,58 @@ fun MessageComposer(
     texteIndicatif: String = "Écrire un message",
 ) {
     val scheme = MaterialTheme.colorScheme
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = Dimens.Space2, vertical = Dimens.Space2),
-        horizontalArrangement = Arrangement.spacedBy(Dimens.Space1),
-        verticalAlignment = Alignment.Bottom,
-    ) {
-        CocoIconButton(
-            icone = CocoIcons.Plus,
-            contentDescription = "Ajouter une pièce jointe",
-            onClick = onJoindre,
-        )
-        BasicTextField(
-            value = valeur,
-            onValueChange = onValeurChange,
-            modifier = Modifier
-                .weight(1f)
-                .semantics { contentDescription = "Message" },
-            textStyle = MaterialTheme.typography.bodyLarge.copy(color = scheme.onSurface),
-            cursorBrush = SolidColor(scheme.primary),
-            maxLines = 5,
-            decorationBox = { champ ->
-                Box(
-                    modifier = Modifier
-                        .heightIn(min = Dimens.MinTouchTarget)
-                        .background(scheme.surfaceContainer, MaterialTheme.shapes.extraLarge)
-                        .padding(horizontal = Dimens.Space4, vertical = Dimens.Space3),
-                    contentAlignment = Alignment.CenterStart,
-                ) {
-                    if (valeur.isEmpty()) {
-                        Text(
-                            texteIndicatif,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = scheme.onSurfaceVariant,
-                        )
-                    }
-                    champ()
-                }
-            },
-        )
-        if (valeur.isBlank()) {
+    // Les boutons sans fond héritent de cette couleur : sans elle, ils restent noirs hors d'une Surface.
+    CompositionLocalProvider(LocalContentColor provides scheme.onSurface) {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(horizontal = Dimens.Space2, vertical = Dimens.Space2),
+            horizontalArrangement = Arrangement.spacedBy(Dimens.Space1),
+            verticalAlignment = Alignment.Bottom,
+        ) {
             CocoIconButton(
-                icone = CocoIcons.Micro,
-                contentDescription = "Enregistrer un message vocal",
-                onClick = onMicro,
+                icone = CocoIcons.Plus,
+                contentDescription = "Ajouter une pièce jointe",
+                onClick = onJoindre,
             )
-        } else {
-            FilledIconButton(onClick = onEnvoyer, modifier = Modifier.heightIn(min = Dimens.MinTouchTarget)) {
-                Icon(CocoIcons.Envoyer, contentDescription = "Envoyer le message")
+            BasicTextField(
+                value = valeur,
+                onValueChange = onValeurChange,
+                modifier = Modifier
+                    .weight(1f)
+                    .semantics { contentDescription = "Message" },
+                textStyle = MaterialTheme.typography.bodyLarge.copy(color = scheme.onSurface),
+                cursorBrush = SolidColor(scheme.primary),
+                maxLines = 5,
+                decorationBox = { champ ->
+                    Box(
+                        modifier = Modifier
+                            .heightIn(min = Dimens.MinTouchTarget)
+                            .background(scheme.surfaceContainer, MaterialTheme.shapes.extraLarge)
+                            .padding(horizontal = Dimens.Space4, vertical = Dimens.Space3),
+                        contentAlignment = Alignment.CenterStart,
+                    ) {
+                        if (valeur.isEmpty()) {
+                            Text(
+                                texteIndicatif,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = scheme.onSurfaceVariant,
+                            )
+                        }
+                        champ()
+                    }
+                },
+            )
+            if (valeur.isBlank()) {
+                CocoIconButton(
+                    icone = CocoIcons.Micro,
+                    contentDescription = "Enregistrer un message vocal",
+                    onClick = onMicro,
+                )
+            } else {
+                FilledIconButton(onClick = onEnvoyer, modifier = Modifier.size(Dimens.MinTouchTarget)) {
+                    Icon(CocoIcons.Envoyer, contentDescription = "Envoyer le message")
+                }
             }
         }
     }
