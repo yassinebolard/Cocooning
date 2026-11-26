@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.PathBuilder
+import androidx.compose.ui.graphics.vector.addPathNodes
 import androidx.compose.ui.graphics.vector.path
 import androidx.compose.ui.unit.dp
 
@@ -30,6 +31,28 @@ private fun icone(nom: String, dessin: PathBuilder.() -> Unit): ImageVector =
         strokeLineJoin = StrokeJoin.Round,
         pathBuilder = dessin,
     ).build()
+
+/** Icône décrite par un ou plusieurs tracés SVG (`d`), mêmes règles de trait que [icone]. */
+private fun iconeSvg(nom: String, vararg traces: String): ImageVector {
+    val b = ImageVector.Builder(
+        name = nom,
+        defaultWidth = 24.dp,
+        defaultHeight = 24.dp,
+        viewportWidth = 24f,
+        viewportHeight = 24f,
+    )
+    traces.forEach { d ->
+        b.addPath(
+            pathData = addPathNodes(d),
+            fill = null,
+            stroke = SolidColor(Color.Black),
+            strokeLineWidth = 2f,
+            strokeLineCap = StrokeCap.Round,
+            strokeLineJoin = StrokeJoin.Round,
+        )
+    }
+    return b.build()
+}
 
 private fun PathBuilder.cercle(cx: Float, cy: Float, r: Float) {
     moveTo(cx + r, cy)
@@ -241,5 +264,39 @@ object CocoIcons {
             cercle(9f, 10f, 2f)
             moveTo(21f, 16f); lineTo(16f, 11f); lineTo(8f, 19f)
         }
+    }
+
+    // Icônes de l'alerte S.O.S reçue (tracés repris de la fiche Bouton S.O.S)
+
+    /** Alerte en cours : cloche. */
+    val Cloche: ImageVector by lazy {
+        iconeSvg("Cloche", "M6 16V11a6 6 0 0 1 12 0v5l2 2H4z", "M10 21h4")
+    }
+
+    /** Position : repère de carte. */
+    val Repere: ImageVector by lazy {
+        iconeSvg(
+            "Repere",
+            "M12 21s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z",
+            "M14.5 9a2.5 2.5 0 1 1-5 0a2.5 2.5 0 1 1 5 0z",
+        )
+    }
+
+    /** Itinéraire vers une position. */
+    val Itineraire: ImageVector by lazy {
+        iconeSvg("Itineraire", "M5 19L19 5", "M9 5h10v10")
+    }
+
+    /** Appel téléphonique. */
+    val Telephone: ImageVector by lazy {
+        iconeSvg(
+            "Telephone",
+            "M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z",
+        )
+    }
+
+    /** Niveau de batterie. */
+    val Batterie: ImageVector by lazy {
+        iconeSvg("Batterie", "M3 7h15v10H3z", "M21 10v4")
     }
 }
