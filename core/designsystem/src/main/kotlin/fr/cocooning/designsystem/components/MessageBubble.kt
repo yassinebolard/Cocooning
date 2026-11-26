@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -76,21 +77,13 @@ fun MessageBubble(
         if (statutVisible != null && statutVisible != StatutMessage.Echec) append(". ").append(statutVisible.lu)
     }
 
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        horizontalAlignment = if (sortant) Alignment.End else Alignment.Start,
-        verticalArrangement = Arrangement.spacedBy(Dimens.Space1),
-    ) {
+    CadreMessage(sortant, statutVisible, onReessayer, modifier) {
         Surface(
             color = fond,
             contentColor = encre,
             shape = if (sortant) CocoShapes.BulleSortante else CocoShapes.BulleEntrante,
             modifier = Modifier
-                .layout { mesurable, contraintes ->
-                    val max = (contraintes.maxWidth * LargeurMaxBulle).toInt()
-                    val p = mesurable.measure(contraintes.copy(minWidth = 0, maxWidth = max))
-                    layout(p.width, p.height) { p.place(0, 0) }
-                }
+                .largeurBulle()
                 .clearAndSetSemantics { contentDescription = lecture },
         ) {
             Column(
@@ -102,27 +95,72 @@ fun MessageBubble(
                     style = MaterialTheme.typography.bodyLarge,
                     modifier = Modifier.align(Alignment.Start),
                 )
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(Dimens.Space1),
-                ) {
-                    val meta = if (statutVisible == StatutMessage.Lu) "$heure · lu" else heure
-                    Text(meta, style = MaterialTheme.typography.bodySmall, color = encreMeta)
-                    when (statutVisible) {
-                        StatutMessage.Envoye -> Icon(
-                            CocoIcons.Coche, contentDescription = null, tint = encreMeta,
-                            modifier = Modifier.size(16.dp),
-                        )
-                        StatutMessage.Distribue, StatutMessage.Lu -> Icon(
-                            CocoIcons.DoubleCoche, contentDescription = null, tint = encreMeta,
-                            modifier = Modifier.size(16.dp),
-                        )
-                        else -> Unit
-                    }
-                }
+                PiedBulle(heure, statutVisible, encreMeta)
             }
         }
-        if (statutVisible == StatutMessage.Echec) {
+    }
+}
+
+/** Limite un contenu de message à 78 % de la place disponible, en suivant sa largeur réelle. */
+internal fun Modifier.largeurBulle(): Modifier = layout { mesurable, contraintes ->
+    val max = (contraintes.maxWidth * LargeurMaxBulle).toInt()
+    val p = mesurable.measure(contraintes.copy(minWidth = 0, maxWidth = max))
+    layout(p.width, p.height) { p.place(0, 0) }
+}
+
+/** Heure, mention « lu » et coches, communs à tous les types de message. */
+@Composable
+internal fun PiedBulle(
+    heure: String,
+    statut: StatutMessage?,
+    encre: Color,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Dimens.Space1),
+    ) {
+        val meta = if (statut == StatutMessage.Lu) "$heure · lu" else heure
+        Text(
+            meta,
+            style = MaterialTheme.typography.bodySmall,
+            color = encre,
+            modifier = Modifier.weight(1f, fill = false),
+        )
+        when (statut) {
+            StatutMessage.Envoye -> Icon(
+                CocoIcons.Coche, contentDescription = null, tint = encre,
+                modifier = Modifier.size(16.dp),
+            )
+            StatutMessage.Distribue, StatutMessage.Lu -> Icon(
+                CocoIcons.DoubleCoche, contentDescription = null, tint = encre,
+                modifier = Modifier.size(16.dp),
+            )
+            else -> Unit
+        }
+    }
+}
+
+/**
+ * Rangée d'un message : aligne le contenu à droite (envoyé) ou à gauche (reçu) et ajoute
+ * dessous la mention d'échec avec son action « réessayer ».
+ */
+@Composable
+internal fun CadreMessage(
+    sortant: Boolean,
+    statut: StatutMessage?,
+    onReessayer: () -> Unit,
+    modifier: Modifier = Modifier,
+    contenu: @Composable () -> Unit,
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = if (sortant) Alignment.End else Alignment.Start,
+        verticalArrangement = Arrangement.spacedBy(Dimens.Space1),
+    ) {
+        contenu()
+        if (statut == StatutMessage.Echec) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(Dimens.Space1),

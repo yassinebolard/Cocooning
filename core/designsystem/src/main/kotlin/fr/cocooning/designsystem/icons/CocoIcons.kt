@@ -196,4 +196,42 @@ object CocoIcons {
             moveTo(13f, 6f); lineTo(19f, 12f); lineTo(13f, 18f)
         }
     }
+
+    // Icônes des médias
+
+    /** Lire un message vocal. Le triangle de lecture est la seule icône pleine du système. */
+    val Lecture: ImageVector by lazy {
+        ImageVector.Builder(
+            name = "Lecture",
+            defaultWidth = 24.dp,
+            defaultHeight = 24.dp,
+            viewportWidth = 24f,
+            viewportHeight = 24f,
+        ).path(
+            fill = SolidColor(Color.Black),
+            stroke = SolidColor(Color.Black),
+            strokeLineWidth = 2f,
+            strokeLineCap = StrokeCap.Round,
+            strokeLineJoin = StrokeJoin.Round,
+        ) {
+            moveTo(8f, 5f); lineTo(19f, 12f); lineTo(8f, 19f); close()
+        }.build()
+    }
+
+    /** Mettre en pause. */
+    val Pause: ImageVector by lazy {
+        icone("Pause") {
+            moveTo(9f, 5f); lineTo(9f, 19f)
+            moveTo(15f, 5f); lineTo(15f, 19f)
+        }
+    }
+
+    /** Photo en attente d'affichage. */
+    val Photo: ImageVector by lazy {
+        icone("Photo") {
+            rect(3f, 5f, 21f, 19f)
+            cercle(9f, 10f, 2f)
+            moveTo(21f, 16f); lineTo(16f, 11f); lineTo(8f, 19f)
+        }
+    }
 }
