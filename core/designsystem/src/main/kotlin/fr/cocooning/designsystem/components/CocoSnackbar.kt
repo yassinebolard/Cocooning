@@ -2,6 +2,7 @@ package fr.cocooning.designsystem.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Icon
@@ -13,6 +14,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import fr.cocooning.designsystem.CocoPreviews
@@ -44,34 +46,50 @@ fun CocoSnackbar(
 ) {
     val scheme = MaterialTheme.colorScheme
     val texteAgrandi = LocalDensity.current.fontScale >= SeuilTexteAgrandi
-    val action: (@Composable () -> Unit)? = libelleAction?.let { libelle ->
-        {
-            TextButton(
-                onClick = onAction,
-                modifier = Modifier.heightIn(min = Dimens.MinTouchTarget),
-                shape = CocoShapes.Pilule,
-            ) {
-                Text(libelle, style = MaterialTheme.typography.labelLarge, color = scheme.inversePrimary)
-            }
-        }
-    }
+    val actionSurSaLigne = libelleAction != null &&
+        (texteAgrandi || libelleAction.length > LongueurMaxActionEnLigne)
     val fermeture: (@Composable () -> Unit)? = onFermer?.let { fermer ->
         {
             IconButton(onClick = fermer) {
-                Icon(CocoIcons.Fermer, contentDescription = "Fermer le message")
+                Icon(
+                    CocoIcons.Fermer,
+                    contentDescription = "Fermer le message",
+                    tint = scheme.inverseOnSurface,
+                )
+            }
+        }
+    }
+    // Sur sa propre ligne, Material mesure l'action avant la croix : un libellé long la
+    // pousserait hors de l'écran. La croix rejoint alors la rangée de l'action, mesurée en premier.
+    val fermetureAvecAction = actionSurSaLigne && fermeture != null
+    val action: (@Composable () -> Unit)? = libelleAction?.let { libelle ->
+        {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TextButton(
+                    onClick = onAction,
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .heightIn(min = Dimens.MinTouchTarget),
+                    shape = CocoShapes.Pilule,
+                ) {
+                    Text(
+                        libelle,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = scheme.inversePrimary,
+                    )
+                }
+                if (fermetureAvecAction) fermeture?.invoke()
             }
         }
     }
     Snackbar(
         modifier = modifier.padding(Dimens.Space3),
         action = action,
-        dismissAction = fermeture,
-        actionOnNewLine = libelleAction != null &&
-            (texteAgrandi || libelleAction.length > LongueurMaxActionEnLigne),
+        dismissAction = if (fermetureAvecAction) null else fermeture,
+        actionOnNewLine = actionSurSaLigne,
         shape = MaterialTheme.shapes.small,
         containerColor = scheme.inverseSurface,
         contentColor = scheme.inverseOnSurface,
-        dismissActionContentColor = scheme.inverseOnSurface,
     ) {
         Text(message, style = MaterialTheme.typography.bodyMedium)
     }
