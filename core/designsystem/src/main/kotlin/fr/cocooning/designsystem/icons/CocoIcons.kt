@@ -226,6 +226,14 @@ object CocoIcons {
         }
     }
 
+    /** Fermer un message. */
+    val Fermer: ImageVector by lazy {
+        icone("Fermer") {
+            moveTo(6f, 6f); lineTo(18f, 18f)
+            moveTo(18f, 6f); lineTo(6f, 18f)
+        }
+    }
+
     /** Photo en attente d'affichage. */
     val Photo: ImageVector by lazy {
         icone("Photo") {
