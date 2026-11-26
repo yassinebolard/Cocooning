@@ -54,6 +54,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import fr.cocooning.designsystem.CocoPreviews
 import fr.cocooning.designsystem.CocoShapes
@@ -211,6 +212,10 @@ fun SosAlertScreen(
 }
 
 private const val SeuilTexteAgrandi = 1.3f
+
+/** Les icônes grandissent avec le texte, jusqu'à 150 %, pour rester à l'échelle des libellés. */
+@Composable
+private fun tailleIcone(base: Dp): Dp = base * LocalDensity.current.fontScale.coerceIn(1f, 1.5f)
 private val HauteurCarte = 180.dp
 private val DecalageApparition = 30.dp
 private val ContourBoutonAlerte = 3.dp
@@ -241,7 +246,7 @@ private fun LigneStatut(alerte: AlerteSosRecue) {
         },
     ) {
         if (alerte.test) PastilleTest()
-        Icon(CocoIcons.Cloche, contentDescription = null, modifier = Modifier.size(Dimens.IconSizeSmall))
+        Icon(CocoIcons.Cloche, contentDescription = null, modifier = Modifier.size(tailleIcone(Dimens.IconSizeSmall)))
         Text(
             text = "$libelle · ${ageCourt(alerte.ageSecondes)}",
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
@@ -273,7 +278,7 @@ private fun EnTete(alerte: AlerteSosRecue) {
         else -> "$prenom a besoin d'aide"
     }
     val sousTitre = when {
-        alerte.etat == EtatAlerteRecue.Terminee -> "$prenom l'a arrêtée avec son code. Tu peux encore l'appeler."
+        alerte.etat == EtatAlerteRecue.Terminee -> "Arrêtée avec son code personnel. Tu peux encore l'appeler."
         alerte.test -> "C'est un essai, personne n'est en danger."
         else -> null
     }
@@ -306,7 +311,7 @@ private fun BlocPosition(alerte: AlerteSosRecue) {
                         style = MaterialTheme.typography.labelLarge,
                     )
                     Text(
-                        text = "Précision ${position.precisionMetres} m · mise à jour ${ageCourt(position.ageSecondes)}",
+                        text = "Précision ${position.precisionMetres} m · mise à jour ${ageCourt(position.ageSecondes)}",
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.semantics {
                             contentDescription = "Précision ${position.precisionMetres} mètres, " +
@@ -321,9 +326,9 @@ private fun BlocPosition(alerte: AlerteSosRecue) {
             LigneInfo(icone = CocoIcons.Batterie) {
                 Text(
                     text = if (batterie <= SeuilBatterieFaible) {
-                        "Batterie faible : $batterie %"
+                        "Batterie faible : $batterie %"
                     } else {
-                        "Batterie : $batterie %"
+                        "Batterie : $batterie %"
                     },
                     style = MaterialTheme.typography.bodyMedium,
                 )
@@ -340,7 +345,7 @@ private fun LigneInfo(icone: ImageVector, contenu: @Composable () -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(Dimens.Space2),
         modifier = Modifier.semantics(mergeDescendants = true) { },
     ) {
-        Icon(icone, contentDescription = null, modifier = Modifier.size(Dimens.IconSizeSmall).padding(top = 1.dp))
+        Icon(icone, contentDescription = null, modifier = Modifier.size(tailleIcone(Dimens.IconSizeSmall)).padding(top = 1.dp))
         Box(Modifier.weight(1f)) { contenu() }
     }
 }
@@ -374,7 +379,7 @@ private fun ActionsContact(
                 appeler(Modifier.weight(1f))
             }
         }
-        BoutonBlanc("Appeler le 112", CocoIcons.Telephone, "Appeler le 112, numéro d'urgence", onAppeler112, Modifier.fillMaxWidth())
+        BoutonBlanc("Appeler le 112", CocoIcons.Telephone, "Appeler le 112, numéro d'urgence", onAppeler112, Modifier.fillMaxWidth())
     }
 }
 
@@ -403,7 +408,7 @@ private fun BoutonBlanc(
         contentPadding = PaddingValues(horizontal = Dimens.Space4, vertical = Dimens.Space2),
         interactionSource = interactions,
     ) {
-        Icon(icone, contentDescription = null, modifier = Modifier.size(Dimens.IconSizeSmall))
+        Icon(icone, contentDescription = null, modifier = Modifier.size(tailleIcone(Dimens.IconSizeSmall)))
         Spacer(Modifier.width(Dimens.Space2))
         Text(
             text = texte,
@@ -436,7 +441,7 @@ private fun BoutonAlerte(texte: String, icone: ImageVector?, onClick: () -> Unit
         interactionSource = interactions,
     ) {
         if (icone != null) {
-            Icon(icone, contentDescription = null, modifier = Modifier.size(Dimens.IconSize))
+            Icon(icone, contentDescription = null, modifier = Modifier.size(tailleIcone(Dimens.IconSize)))
             Spacer(Modifier.width(Dimens.Space2))
         }
         Text(
@@ -463,7 +468,7 @@ private fun ConfirmationVue(prenom: String) {
             .padding(horizontal = Dimens.Space4, vertical = Dimens.Space3)
             .semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
     ) {
-        Icon(CocoIcons.Coche, contentDescription = null, tint = cocoon.onSosDouce, modifier = Modifier.size(Dimens.IconSize))
+        Icon(CocoIcons.Coche, contentDescription = null, tint = cocoon.onSosDouce, modifier = Modifier.size(tailleIcone(Dimens.IconSize)))
         Text(
             text = "$prenom sait que tu as vu l'alerte et que tu arrives.",
             style = MaterialTheme.typography.labelLarge,
@@ -473,12 +478,16 @@ private fun ConfirmationVue(prenom: String) {
     }
 }
 
-/** « il y a 12 s », « il y a 3 min », « il y a 1 h 05 ». */
+/**
+ * « il y a 12 s », « il y a 3 min », « il y a 1 h 05 ».
+ * Les nombres et leur unité sont liés par une espace insécable (U+00A0), comme « 4 m », « 23 % »
+ * et « le 112 » plus haut : à 200 % une unité ne part jamais seule à la ligne.
+ */
 internal fun ageCourt(secondes: Long): String = when {
     secondes < 5 -> "à l'instant"
-    secondes < 60 -> "il y a $secondes s"
-    secondes < 3600 -> "il y a ${secondes / 60} min"
-    else -> "il y a ${secondes / 3600} h ${(secondes % 3600 / 60).toString().padStart(2, '0')}"
+    secondes < 60 -> "il y a $secondes s"
+    secondes < 3600 -> "il y a ${secondes / 60} min"
+    else -> "il y a ${secondes / 3600} h ${(secondes % 3600 / 60).toString().padStart(2, '0')}"
 }
 
 /** Même durée en toutes lettres pour TalkBack. */
