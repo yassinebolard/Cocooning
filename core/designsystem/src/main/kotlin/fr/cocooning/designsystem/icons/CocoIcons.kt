@@ -120,4 +120,80 @@ object CocoIcons {
             lineTo(12f, 16.51f)
         }
     }
+
+    // Icônes de navigation et de saisie
+
+    private fun PathBuilder.rect(x1: Float, y1: Float, x2: Float, y2: Float) {
+        moveTo(x1, y1); lineTo(x2, y1); lineTo(x2, y2); lineTo(x1, y2); close()
+    }
+
+    /** Accueil. */
+    val Maison: ImageVector by lazy {
+        icone("Maison") {
+            moveTo(4f, 11f); lineTo(12f, 4f); lineTo(20f, 11f)
+            moveTo(6f, 10f); lineTo(6f, 20f); lineTo(18f, 20f); lineTo(18f, 10f)
+        }
+    }
+
+    /** Messages. */
+    val Bulle: ImageVector by lazy {
+        icone("Bulle") {
+            moveTo(5f, 5f); lineTo(19f, 5f); lineTo(19f, 16f); lineTo(10f, 16f)
+            lineTo(6f, 20f); lineTo(6f, 16f); lineTo(5f, 16f); close()
+        }
+    }
+
+    /** Cycle : cadran avec une aiguille. */
+    val Cycle: ImageVector by lazy {
+        icone("Cycle") {
+            cercle(12f, 12f, 8.5f)
+            moveTo(12f, 7f); lineTo(12f, 12f); lineTo(15.5f, 14f)
+        }
+    }
+
+    /** Agenda. */
+    val Agenda: ImageVector by lazy {
+        icone("Agenda") {
+            rect(4f, 6f, 20f, 20f)
+            moveTo(4f, 10f); lineTo(20f, 10f)
+            moveTo(8f, 3f); lineTo(8f, 7f)
+            moveTo(16f, 3f); lineTo(16f, 7f)
+        }
+    }
+
+    /** Notes. */
+    val Note: ImageVector by lazy {
+        icone("Note") {
+            rect(6f, 3f, 18f, 21f)
+            moveTo(9f, 8f); lineTo(15f, 8f)
+            moveTo(9f, 12f); lineTo(15f, 12f)
+            moveTo(9f, 16f); lineTo(13f, 16f)
+        }
+    }
+
+    /** Ajouter une pièce jointe. */
+    val Plus: ImageVector by lazy {
+        icone("Plus") {
+            moveTo(12f, 5f); lineTo(12f, 19f)
+            moveTo(5f, 12f); lineTo(19f, 12f)
+        }
+    }
+
+    /** Message vocal. */
+    val Micro: ImageVector by lazy {
+        icone("Micro") {
+            rect(9f, 3f, 15f, 13f)
+            moveTo(6f, 11f)
+            arcTo(6f, 6f, 0f, isMoreThanHalf = false, isPositiveArc = false, x1 = 18f, y1 = 11f)
+            moveTo(12f, 17f); lineTo(12f, 21f)
+        }
+    }
+
+    /** Envoyer un message. */
+    val Envoyer: ImageVector by lazy {
+        icone("Envoyer") {
+            moveTo(5f, 12f); lineTo(19f, 12f)
+            moveTo(13f, 6f); lineTo(19f, 12f); lineTo(13f, 18f)
+        }
+    }
 }
