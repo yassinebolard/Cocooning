@@ -29,6 +29,7 @@ room {
 dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    implementation(project(":core:securite"))
     ksp(libs.androidx.room.compiler)
     api(libs.kotlinx.coroutines.core)
 

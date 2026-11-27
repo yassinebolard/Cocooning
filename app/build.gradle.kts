@@ -54,6 +54,7 @@ dependencies {
     implementation(libs.kotlinx.serialization.core)
     implementation(project(":core:designsystem"))
     implementation(project(":feature:accueil"))
+    implementation(project(":feature:cycle"))
     implementation(project(":core:cycle"))
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))

@@ -1,6 +1,8 @@
 package fr.cocooning.core.cycle.donnees
 
 import fr.cocooning.core.cycle.domaine.CalculateurCycle
+import fr.cocooning.core.cycle.domaine.ConfigurationInitiale
+import fr.cocooning.core.cycle.domaine.Contraception
 import fr.cocooning.core.cycle.domaine.CycleSaisi
 import fr.cocooning.core.cycle.domaine.ErreurSaisie
 import fr.cocooning.core.cycle.domaine.EtatCycle
@@ -10,6 +12,7 @@ import fr.cocooning.core.cycle.domaine.Phase
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.IOException
@@ -96,5 +99,68 @@ class CycleRepositoryLocalTest {
         val enPanne = SourceCyclesMemoire(listOf(CycleSaisi(1, d0))).apply { panne = IOException("disque plein") }
         val resultat = CycleRepositoryLocal(enPanne).basculerRegles(d0.plusDays(2))
         assertTrue(resultat is ResultatSaisie.Echec)
+    }
+
+    @Test
+    fun `la saisie initiale enregistre les durees, la contraception et les dernieres regles`() = runTest {
+        assertNull(depot.parametresDeclares().first())
+        val parametres = ParametresCycle(dureeCycle = 31, dureeRegles = 4, contraception = Contraception.SteriletCuivre)
+        val resultat = depot.configurer(ConfigurationInitiale(d0, d0.plusDays(3), parametres), d0.plusDays(10))
+        assertEquals(ResultatSaisie.Enregistree(null), resultat)
+        assertEquals(parametres, depot.parametresDeclares().first())
+        val cycle = depot.historique().first().single()
+        assertEquals(d0, cycle.debut)
+        assertEquals(d0.plusDays(3), cycle.finRegles)
+        assertEquals(31, etat(d0.plusDays(10)).dureeCycle.jours)
+    }
+
+    @Test
+    fun `la saisie initiale sans date garde l'historique tel quel`() = runTest {
+        depot.basculerRegles(d0)
+        depot.configurer(ConfigurationInitiale(null, null, ParametresCycle(30, 5)), d0.plusDays(1))
+        assertEquals(1, depot.historique().first().size)
+        assertEquals(30, depot.parametres().first().dureeCycle)
+    }
+
+    @Test
+    fun `la saisie initiale refuse une duree hors limites sans rien ecrire`() = runTest {
+        val resultat = depot.configurer(ConfigurationInitiale(d0, null, ParametresCycle(70, 5)), d0)
+        assertEquals(ResultatSaisie.Refusee(ErreurSaisie.DureeCycleHorsLimites), resultat)
+        assertNull(depot.parametresDeclares().first())
+        assertTrue(depot.historique().first().isEmpty())
+    }
+
+    @Test
+    fun `deplacer des regles de plusieurs jours en une correction`() = runTest {
+        depot.ajouter(d0, d0.plusDays(4), d0.plusDays(40))
+        val id = depot.historique().first().single().id
+        // Corriger le début seul serait refusé : l'ancienne fin précéderait le nouveau début.
+        assertEquals(
+            ResultatSaisie.Refusee(ErreurSaisie.FinAvantDebut),
+            depot.corrigerDebut(id, d0.plusDays(10), d0.plusDays(40)),
+        )
+        assertEquals(
+            ResultatSaisie.Enregistree(null),
+            depot.corriger(id, d0.plusDays(10), d0.plusDays(13), d0.plusDays(40)),
+        )
+        assertEquals(CycleSaisi(id, d0.plusDays(10), d0.plusDays(13)), depot.historique().first().single())
+    }
+
+    @Test
+    fun `ajouter des regles oubliees recalcule la moyenne`() = runTest {
+        // Deux débuts saisis à 64 jours d'écart : un début a été oublié, le cycle est écarté.
+        depot.ajouter(d0, null, d0.plusDays(70))
+        depot.ajouter(d0.plusDays(64), null, d0.plusDays(70))
+        assertEquals(28, etat(d0.plusDays(70)).dureeCycle.jours)
+        assertEquals(0, etat(d0.plusDays(70)).dureeCycle.cyclesObserves)
+
+        depot.ajouter(d0.plusDays(32), d0.plusDays(36), d0.plusDays(70))
+        // 32 et 32 jours observés, plus la valeur déclarée (28) : 31.
+        assertEquals(2, etat(d0.plusDays(70)).dureeCycle.cyclesObserves)
+        assertEquals(31, etat(d0.plusDays(70)).dureeCycle.jours)
+        assertEquals(
+            ResultatSaisie.Refusee(ErreurSaisie.ChevaucheCyclePrecedent),
+            depot.ajouter(d0.plusDays(35), null, d0.plusDays(70)),
+        )
     }
 }

@@ -2,6 +2,7 @@ package com.agdc.cocooning.navigation
 
 import androidx.navigation3.runtime.NavKey
 import fr.cocooning.feature.accueil.AccueilCle
+import fr.cocooning.feature.cycle.CycleCle
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

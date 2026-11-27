@@ -6,18 +6,14 @@ import fr.cocooning.core.cycle.domaine.OperationCycle
 import fr.cocooning.core.cycle.domaine.Phase
 import fr.cocooning.core.cycle.donnees.CycleRepository
 import fr.cocooning.core.cycle.donnees.ResultatSaisie
+import fr.cocooning.core.cycle.donnees.joursCalendrier
 import fr.cocooning.designsystem.components.PhaseCycle
 import fr.cocooning.designsystem.components.SegmentCycle
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flow
 import java.time.Clock
-import java.time.Duration
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 /**
  * Accueil avec le vrai cycle de madame, lu dans [cycles] et recalculé chaque jour.
@@ -76,13 +72,3 @@ private fun Phase.versDesign(): PhaseCycle = when (this) {
     Phase.Ovulatoire -> PhaseCycle.Ovulatoire
     Phase.Luteale -> PhaseCycle.Luteale
 }
-
-/** Émet la date du jour, puis de nouveau juste après chaque minuit. */
-fun joursCalendrier(horloge: Clock): Flow<LocalDate> = flow {
-    while (true) {
-        val maintenant = LocalDateTime.now(horloge)
-        emit(maintenant.toLocalDate())
-        val minuit = maintenant.toLocalDate().plusDays(1).atStartOfDay()
-        delay(Duration.between(maintenant, minuit).toMillis() + 1_000)
-    }
-}.distinctUntilChanged()

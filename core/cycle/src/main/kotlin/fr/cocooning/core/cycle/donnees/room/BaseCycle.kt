@@ -1,6 +1,7 @@
 package fr.cocooning.core.cycle.donnees.room
 
 import android.content.Context
+import androidx.room.AutoMigration
 import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Database
@@ -16,17 +17,20 @@ import androidx.room.TypeConverters
 import androidx.room.Update
 import androidx.room.Upsert
 import androidx.room.withTransaction
+import fr.cocooning.core.cycle.domaine.Contraception
 import fr.cocooning.core.cycle.domaine.CycleSaisi
 import fr.cocooning.core.cycle.domaine.ParametresCycle
 import fr.cocooning.core.cycle.donnees.SourceCycles
+import fr.cocooning.core.securite.BaseChiffree
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.time.LocalDate
 
 /*
- * Stockage local du cycle avec Room, comme le prévoit le cahier des charges (section 7,
- * « Room + SQLCipher »). Le chiffrement SQLCipher viendra avec la gestion des clés : la base
- * n'est pas encore chiffrée.
+ * Stockage local du cycle avec Room et SQLCipher (ENF-SEC-04, cahier des charges section 7).
+ * La base est chiffrée sur le téléphone de madame ; sa clé est protégée par l'Android Keystore
+ * (voir [BaseChiffree]). Une base en clair laissée par une version précédente est chiffrée
+ * à la première ouverture, sans perte.
  */
 
 @Entity(tableName = "cycles", indices = [Index(value = ["debut"], unique = true)])
@@ -42,6 +46,8 @@ data class ParametresCycleEntity(
     @PrimaryKey val id: Int = UNIQUE,
     @ColumnInfo(name = "duree_cycle") val dureeCycle: Int,
     @ColumnInfo(name = "duree_regles") val dureeRegles: Int,
+    /** Nom de la valeur de [Contraception], nul si madame n'a rien indiqué. Ajouté en version 2. */
+    val contraception: String? = null,
 ) {
     companion object {
         const val UNIQUE = 0
@@ -84,7 +90,12 @@ interface CycleDao {
     suspend fun enregistrerParametres(parametres: ParametresCycleEntity)
 }
 
-@Database(entities = [CycleEntity::class, ParametresCycleEntity::class], version = 1, exportSchema = true)
+@Database(
+    entities = [CycleEntity::class, ParametresCycleEntity::class],
+    version = 2,
+    exportSchema = true,
+    autoMigrations = [AutoMigration(from = 1, to = 2)],
+)
 @TypeConverters(ConvertisseursDate::class)
 abstract class BaseCycle : RoomDatabase() {
     abstract fun cycleDao(): CycleDao
@@ -92,8 +103,11 @@ abstract class BaseCycle : RoomDatabase() {
     companion object {
         const val NOM = "cocooning_cycle.db"
 
+        /** Base chiffrée. La clé est préparée à la première ouverture, hors du fil principal. */
         fun creer(context: Context): BaseCycle =
-            Room.databaseBuilder(context.applicationContext, BaseCycle::class.java, NOM).build()
+            Room.databaseBuilder(context.applicationContext, BaseCycle::class.java, NOM)
+                .openHelperFactory(BaseChiffree.fabrique(context, NOM))
+                .build()
     }
 }
 
@@ -110,11 +124,21 @@ class SourceCyclesRoom(private val base: BaseCycle) : SourceCycles {
     override suspend fun supprimer(cycleId: Long) = dao.supprimer(cycleId)
 
     override suspend fun enregistrerParametres(parametres: ParametresCycle) =
-        dao.enregistrerParametres(ParametresCycleEntity(dureeCycle = parametres.dureeCycle, dureeRegles = parametres.dureeRegles))
+        dao.enregistrerParametres(
+            ParametresCycleEntity(
+                dureeCycle = parametres.dureeCycle,
+                dureeRegles = parametres.dureeRegles,
+                contraception = parametres.contraception?.name,
+            ),
+        )
 
     override suspend fun <R> enTransaction(bloc: suspend () -> R): R = base.withTransaction { bloc() }
 }
 
 private fun CycleEntity.versDomaine() = CycleSaisi(id, debut, finRegles)
 
-private fun ParametresCycleEntity.versDomaine() = ParametresCycle(dureeCycle, dureeRegles)
+private fun ParametresCycleEntity.versDomaine() = ParametresCycle(
+    dureeCycle = dureeCycle,
+    dureeRegles = dureeRegles,
+    contraception = Contraception.entries.firstOrNull { it.name == contraception },
+)
