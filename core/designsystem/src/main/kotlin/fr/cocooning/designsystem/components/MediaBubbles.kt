@@ -70,7 +70,7 @@ private fun dureeParlee(secondes: Int): String {
  * écoutée est opaque, durée, heure et statut. La lecture audio est gérée par l'appelant.
  *
  * TalkBack lit un seul élément actionnable : « Écouter le message vocal de 14 secondes,
- * Inès, 18 h 02 ».
+ * Mymy, 18 h 02 ».
  *
  * @param amplitudes volume de 0 à 1, dans l'ordre du temps. La liste est rééchantillonnée
  * selon la largeur disponible.
@@ -288,7 +288,7 @@ private fun MediaBubblesPreview() {
         ) {
             VoiceBubble(
                 dureeSecondes = 14, amplitudes = OndeExemple, enLecture = false, onLecturePause = {},
-                direction = DirectionMessage.Entrant, auteur = "Inès",
+                direction = DirectionMessage.Entrant, auteur = "Mymy",
                 heure = "18:12", heureParlee = "18 h 12", progression = { 0.4f },
             )
             VoiceBubble(
@@ -299,7 +299,7 @@ private fun MediaBubblesPreview() {
             )
             ImageBubble(
                 poids = "2,1 Mo", onOuvrir = {}, direction = DirectionMessage.Entrant,
-                auteur = "Inès", heure = "18:20", heureParlee = "18 h 20",
+                auteur = "Mymy", heure = "18:20", heureParlee = "18 h 20",
             )
             ImageBubble(
                 poids = "840 Ko", onOuvrir = {}, direction = DirectionMessage.Sortant,

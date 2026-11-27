@@ -119,7 +119,7 @@ data class AlerteSosRecue(
 /**
  * Écran plein écran de l'alerte S.O.S reçue par le partenaire (EF-SOS-05, EF-SOS-06).
  *
- * Fond `sos`, texte `sur-sos`. De haut en bas : depuis quand, « Inès a besoin d'aide », la carte,
+ * Fond `sos`, texte `sur-sos`. De haut en bas : depuis quand, « Mymy a besoin d'aide », la carte,
  * l'adresse avec sa précision et la batterie, Itinéraire et Appeler (48 dp), Appeler le 112, puis
  * « J'ai vu, j'arrive » (72 dp, contour de 3 dp). Une fois vue, le gros bouton laisse place à une
  * confirmation ; une fois terminée, il devient « Fermer ».
@@ -521,7 +521,7 @@ internal fun ageParle(secondes: Long): String {
 // Aperçus
 
 private val AlerteExemple = AlerteSosRecue(
-    prenom = "Inès",
+    prenom = "Mymy",
     ageSecondes = 12,
     position = PositionAlerte(
         latitude = 45.7578,

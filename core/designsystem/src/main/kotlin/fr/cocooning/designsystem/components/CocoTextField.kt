@@ -160,7 +160,7 @@ private fun CocoTextFieldPreview() {
             modifier = Modifier.padding(Dimens.Space5),
             verticalArrangement = Arrangement.spacedBy(Dimens.Space4),
         ) {
-            var nom by remember { mutableStateOf("Inès") }
+            var nom by remember { mutableStateOf("Mymy") }
             CocoTextField(
                 valeur = nom,
                 onValeurChange = { nom = it },

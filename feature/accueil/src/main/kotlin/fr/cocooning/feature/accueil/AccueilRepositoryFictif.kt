@@ -45,7 +45,7 @@ class AccueilRepositoryFictif(
         )
 
         fun exemple(aujourdhui: LocalDate) = DonneesAccueil(
-            prenom = "Inès",
+            prenom = "Mymy",
             prenomPartenaire = "Yassine",
             aujourdhui = aujourdhui,
             cycle = ResumeCycle(
