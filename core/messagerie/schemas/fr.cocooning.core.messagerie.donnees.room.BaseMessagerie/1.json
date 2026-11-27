@@ -1,0 +1,208 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "6722c393c8afc933a80e30c420f54ec9",
+    "entities": [
+      {
+        "tableName": "messages",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `conversation` TEXT NOT NULL, `auteur` TEXT NOT NULL, `sortant` INTEGER NOT NULL, `type` TEXT, `corps` TEXT, `reponse_a` TEXT, `cree_le` INTEGER NOT NULL, `arrive_le` INTEGER NOT NULL, `etat_envoi` TEXT NOT NULL, `supprime_pour_tous` INTEGER NOT NULL, `masque` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "conversation",
+            "columnName": "conversation",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "auteur",
+            "columnName": "auteur",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sortant",
+            "columnName": "sortant",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "corps",
+            "columnName": "corps",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "reponseA",
+            "columnName": "reponse_a",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "creeLe",
+            "columnName": "cree_le",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "arriveLe",
+            "columnName": "arrive_le",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "etatEnvoi",
+            "columnName": "etat_envoi",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "supprimePourTous",
+            "columnName": "supprime_pour_tous",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "masque",
+            "columnName": "masque",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_messages_conversation_cree_le",
+            "unique": false,
+            "columnNames": [
+              "conversation",
+              "cree_le"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_messages_conversation_cree_le` ON `${TABLE_NAME}` (`conversation`, `cree_le`)"
+          },
+          {
+            "name": "index_messages_sortant_etat_envoi",
+            "unique": false,
+            "columnNames": [
+              "sortant",
+              "etat_envoi"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_messages_sortant_etat_envoi` ON `${TABLE_NAME}` (`sortant`, `etat_envoi`)"
+          }
+        ]
+      },
+      {
+        "tableName": "accuses",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`message` TEXT NOT NULL, `destinataire` TEXT NOT NULL, `recu_le` INTEGER, `lu_le` INTEGER, PRIMARY KEY(`message`, `destinataire`), FOREIGN KEY(`message`) REFERENCES `messages`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "message",
+            "columnName": "message",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "destinataire",
+            "columnName": "destinataire",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recuLe",
+            "columnName": "recu_le",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "luLe",
+            "columnName": "lu_le",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "message",
+            "destinataire"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "messages",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "message"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      },
+      {
+        "tableName": "reactions",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`message` TEXT NOT NULL, `membre` TEXT NOT NULL, `emoji` TEXT NOT NULL, PRIMARY KEY(`message`, `membre`), FOREIGN KEY(`message`) REFERENCES `messages`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "message",
+            "columnName": "message",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "membre",
+            "columnName": "membre",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "emoji",
+            "columnName": "emoji",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "message",
+            "membre"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "messages",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "message"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6722c393c8afc933a80e30c420f54ec9')"
+    ]
+  }
+}
