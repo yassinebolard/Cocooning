@@ -25,5 +25,6 @@ dependencyResolutionManagement {
 rootProject.name = "Cocooning"
 include(":app")
 include(":core:designsystem")
+include(":core:cycle")
 include(":feature:accueil")
  
