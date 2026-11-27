@@ -37,7 +37,7 @@ import kotlinx.coroutines.runBlocking
 data class ActionsAccueil(
     val onOuvrirMessages: () -> Unit = {},
     val onOuvrirCycle: () -> Unit = {},
-    val onOuvrirAgenda: () -> Unit = {},
+    val onOuvrirCalendrier: () -> Unit = {},
     val onOuvrirNotes: () -> Unit = {},
     val onAnnoncer: (String) -> Unit = {},
 )
@@ -153,9 +153,9 @@ private fun ContenuAccueil(
 
         donnees.prochainEvenement?.let { evenement ->
             CocoCard(
-                titre = "Agenda",
+                titre = "Calendrier",
                 icone = CocoIcons.Agenda,
-                onClick = actions.onOuvrirAgenda,
+                onClick = actions.onOuvrirCalendrier,
                 modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(

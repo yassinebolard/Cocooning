@@ -27,7 +27,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.agdc.cocooning.di.ConteneurApp
-import com.agdc.cocooning.navigation.AgendaCle
+import com.agdc.cocooning.navigation.CalendrierCle
 import com.agdc.cocooning.navigation.CycleCle
 import com.agdc.cocooning.navigation.MessagesCle
 import com.agdc.cocooning.navigation.NavigationPrincipale
@@ -77,7 +77,7 @@ fun CocooningApp(conteneur: ConteneurApp) {
     val actionsAccueil = ActionsAccueil(
         onOuvrirMessages = { navigation.ouvrirOnglet(MessagesCle) },
         onOuvrirCycle = { navigation.ouvrirOnglet(CycleCle) },
-        onOuvrirAgenda = { navigation.ouvrirOnglet(AgendaCle) },
+        onOuvrirCalendrier = { navigation.ouvrirOnglet(CalendrierCle) },
         onOuvrirNotes = { navigation.ouvrirOnglet(NotesCle) },
         onAnnoncer = annoncer,
     )
@@ -134,17 +134,17 @@ fun CocooningApp(conteneur: ConteneurApp) {
                         margeBas = margeSos,
                     )
                 }
-                entry<AgendaCle> {
+                entry<NotesCle> {
                     OngletAVenir(
                         destination = destinations[3],
-                        message = "Votre agenda commun arrive bientôt.",
+                        message = "Vos notes partagées arrivent bientôt.",
                         margeBas = margeSos,
                     )
                 }
-                entry<NotesCle> {
+                entry<CalendrierCle> {
                     OngletAVenir(
                         destination = destinations[4],
-                        message = "Vos notes partagées arrivent bientôt.",
+                        message = "Votre calendrier commun arrive bientôt.",
                         margeBas = margeSos,
                     )
                 }

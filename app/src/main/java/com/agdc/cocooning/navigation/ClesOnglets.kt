@@ -15,7 +15,7 @@ data object MessagesCle : NavKey
 data object CycleCle : NavKey
 
 @Serializable
-data object AgendaCle : NavKey
+data object CalendrierCle : NavKey
 
 @Serializable
 data object NotesCle : NavKey

@@ -28,7 +28,7 @@ class NavigationPrincipaleTest {
         nav.ouvrirOnglet(NotesCle)
         assertEquals(listOf(AccueilCle, NotesCle), pile)
         assertEquals(NotesCle, nav.ongletCourant)
-        assertEquals(4, nav.indexOngletCourant)
+        assertEquals(3, nav.indexOngletCourant)
     }
 
     @Test
@@ -44,7 +44,7 @@ class NavigationPrincipaleTest {
     fun `le retour ramene a l'accueil puis rend la main au systeme`() {
         val pile = mutableListOf<NavKey>(AccueilCle)
         val nav = NavigationPrincipale(pile)
-        nav.ouvrirOnglet(AgendaCle)
+        nav.ouvrirOnglet(CalendrierCle)
         assertTrue(nav.retour())
         assertEquals(listOf<NavKey>(AccueilCle), pile)
         assertFalse(nav.retour())

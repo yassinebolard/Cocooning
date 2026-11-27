@@ -56,13 +56,13 @@ data class DestinationNav(
     val badge: Int = 0,
 )
 
-/** Les cinq destinations de premier niveau : Accueil, Messages, Cycle, Agenda, Notes. */
+/** Les cinq destinations de premier niveau, dans l'ordre du cahier des charges : Accueil, Messages, Cycle, Notes, Calendrier. */
 fun destinationsPrincipales(nonLus: Int = 0) = listOf(
     DestinationNav("Accueil", CocoIcons.Maison),
     DestinationNav("Messages", CocoIcons.Bulle, badge = nonLus),
     DestinationNav("Cycle", CocoIcons.Cycle),
-    DestinationNav("Agenda", CocoIcons.Agenda),
     DestinationNav("Notes", CocoIcons.Note),
+    DestinationNav("Calendrier", CocoIcons.Agenda),
 )
 
 /**
