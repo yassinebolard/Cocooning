@@ -1,0 +1,66 @@
+# Intégration continue (ENF-QUAL-02 du cahier des charges).
+# À chaque pull request et à chaque push sur main : compilation debug,
+# tests unitaires et lint. Les rapports sont publiés si une étape échoue.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Jeton GitHub réduit au minimum : lecture du code seulement.
+permissions:
+  contents: read
+
+# Un nouveau push sur la même branche annule l'exécution précédente.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Compilation, tests et lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Récupérer le code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Java 17 : version cible du code (compileOptions).
+      # Java 25 : exigé pour le démon Gradle par gradle/gradle-daemon-jvm.properties.
+      # La dernière version listée devient JAVA_HOME, ce qui évite que Gradle
+      # télécharge un JDK 25 à chaque exécution.
+      - name: Installer Java 17 et 25
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: |
+            17
+            25
+
+      - name: Installer le SDK Android
+        uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4.0.4
+
+      # Met en cache les dépendances et la distribution Gradle, et vérifie
+      # que gradle-wrapper.jar est un wrapper officiel. Sur les pull requests,
+      # le cache est seulement lu, jamais écrit.
+      - name: Configurer Gradle et son cache
+        uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+
+      - name: Compiler, tester et analyser
+        run: ./gradlew assembleDebug testDebugUnitTest lint --console=plain
+
+      - name: Publier les rapports en cas d'échec
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: rapports-ci
+          path: |
+            **/build/reports/
+            **/build/test-results/
+          retention-days: 14
+          if-no-files-found: ignore
