@@ -125,7 +125,7 @@ Les idées sont bienvenues dans les issues. Le travail passe par des branches, j
 
 ## Licence
 
-À définir pour le code.
+Le code de Cocooning est sous licence GNU AGPL-3.0 (fichier [`LICENSE`](LICENSE)), choix validé le 27/11/2026 : la messagerie utilise [libsignal](https://github.com/signalapp/libsignal), elle-même sous AGPL-3.0 (voir `docs/adr/0003-architecture-messagerie-chiffree.md`).
 
 Les polices embarquées dans `core/designsystem/src/main/res/font/` sont sous licence SIL Open Font License 1.1 :
 
