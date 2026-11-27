@@ -45,7 +45,7 @@ private const val LargeurMaxBulle = 0.78f
  * droite sur `bulle-sortante`. Rayon 16 dp, coin de départ à 6 dp, largeur qui suit le texte
  * jusqu'à 78 %, aucune hauteur fixe.
  *
- * TalkBack lit la bulle d'un seul tenant : « Inès, 18 h 02 : Tu rentres à quelle heure ce soir ? ».
+ * TalkBack lit la bulle d'un seul tenant : « Mymy, 18 h 02 : Tu rentres à quelle heure ce soir ? ».
  *
  * @param auteur prénom lu par TalkBack.
  * @param heure heure affichée (« 18:02 »).
@@ -194,7 +194,7 @@ private fun MessageBubblePreview() {
             MessageBubble(
                 texte = "Tu rentres à quelle heure ce soir ?",
                 direction = DirectionMessage.Entrant,
-                auteur = "Inès", heure = "18:02", heureParlee = "18 h 02",
+                auteur = "Mymy", heure = "18:02", heureParlee = "18 h 02",
             )
             MessageBubble(
                 texte = "Vers 19 h, je passe prendre du pain.",

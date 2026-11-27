@@ -39,7 +39,7 @@ class AccueilViewModelTest {
         backgroundScope.launch { vm.etat.collect {} }
         advanceUntilIdle()
         val pret = vm.etat.value as AccueilUiState.Pret
-        assertEquals("Inès", pret.donnees.prenom)
+        assertEquals("Mymy", pret.donnees.prenom)
         assertEquals(LocalDate.of(2026, 11, 27), pret.donnees.aujourdhui)
     }
 

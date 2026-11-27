@@ -27,7 +27,7 @@ import fr.cocooning.designsystem.Dimens
 
 /**
  * Carte de la phase du jour : fond de la couleur de phase, icône dans une pastille, titre et
- * contenu en `sur-phase`. Le titre doit nommer la phase (« Inès · phase lutéale ») : la couleur
+ * contenu en `sur-phase`. Le titre doit nommer la phase (« Mymy · phase lutéale ») : la couleur
  * ne porte jamais seule l'information.
  *
  * La hauteur suit le contenu. Si [onClick] est fourni, toute la carte est cible.
@@ -101,10 +101,10 @@ private fun PhaseCardPreview() {
             modifier = Modifier.padding(Dimens.Space5),
             verticalArrangement = Arrangement.spacedBy(Dimens.Space3),
         ) {
-            PhaseCard(PhaseCycle.Luteale, "Inès · phase lutéale", Modifier.fillMaxWidth(), onClick = {}) {
+            PhaseCard(PhaseCycle.Luteale, "Mymy · phase lutéale", Modifier.fillMaxWidth(), onClick = {}) {
                 Text("Règles prévues dans 6 jours.", style = MaterialTheme.typography.bodyMedium)
             }
-            PhaseCard(PhaseCycle.Menstruelle, "Inès · phase menstruelle", Modifier.fillMaxWidth()) {
+            PhaseCard(PhaseCycle.Menstruelle, "Mymy · phase menstruelle", Modifier.fillMaxWidth()) {
                 Text("Un peu de douceur est la bienvenue.", style = MaterialTheme.typography.bodyMedium)
             }
         }

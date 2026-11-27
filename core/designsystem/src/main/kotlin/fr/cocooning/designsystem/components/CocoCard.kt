@@ -93,7 +93,7 @@ private fun CocoCardPreview() {
             modifier = Modifier.padding(Dimens.Space5),
             verticalArrangement = Arrangement.spacedBy(Dimens.Space3),
         ) {
-            CocoCard(modifier = Modifier.fillMaxWidth(), titre = "Inès · phase lutéale", icone = CocoIcons.Lune) {
+            CocoCard(modifier = Modifier.fillMaxWidth(), titre = "Mymy · phase lutéale", icone = CocoIcons.Lune) {
                 Text(
                     "Règles prévues dans 6 jours.",
                     style = MaterialTheme.typography.bodyMedium,
