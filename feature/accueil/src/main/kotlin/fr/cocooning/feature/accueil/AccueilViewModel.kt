@@ -24,8 +24,9 @@ class AccueilViewModel(private val depot: AccueilRepository) : ViewModel() {
             initialValue = AccueilUiState.Chargement,
         )
 
-    fun basculerRegles() {
-        viewModelScope.launch { depot.basculerRegles() }
+    /** Enregistre le début ou la fin des règles, puis transmet à [annoncer] ce qui a été noté. */
+    fun basculerRegles(annoncer: (String) -> Unit = {}) {
+        viewModelScope.launch { annoncer(annonce(depot.basculerRegles())) }
     }
 
     companion object {
@@ -33,4 +34,14 @@ class AccueilViewModel(private val depot: AccueilRepository) : ViewModel() {
             initializer { AccueilViewModel(depot) }
         }
     }
+}
+
+/** Phrase lue par la barre de message et TalkBack après un appui sur le bouton des règles. */
+internal fun annonce(resultat: ResultatBascule): String = when (resultat) {
+    ResultatBascule.Debut -> "C'est noté : début des règles aujourd'hui, jour 1 du cycle."
+    is ResultatBascule.Fin ->
+        if (resultat.dureeJours == 1) "C'est noté : fin des règles aujourd'hui, après 1 jour."
+        else "C'est noté : fin des règles aujourd'hui, après ${resultat.dureeJours} jours."
+    ResultatBascule.Reprise -> "C'est noté : tes règles continuent."
+    ResultatBascule.Echec -> "Ça n'a pas pu être enregistré. Réessaie dans un instant."
 }

@@ -1,77 +1,71 @@
 package fr.cocooning.feature.accueil
 
-import fr.cocooning.designsystem.components.PhaseCycle
-import fr.cocooning.designsystem.components.SegmentCycle
+import fr.cocooning.core.cycle.domaine.CycleSaisi
+import fr.cocooning.core.cycle.donnees.CycleRepositoryLocal
+import fr.cocooning.core.cycle.donnees.SourceCyclesMemoire
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.onStart
-import kotlinx.coroutines.flow.update
 import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalTime
 
 /**
- * Données fictives, en attendant le serveur et la base locale. Les prénoms et les contenus sont
- * des exemples ; rien n'est enregistré ni envoyé.
+ * Accueil de démonstration, pour les aperçus et les tests : un historique de cycle en mémoire
+ * (jour 22, phase lutéale) passé par les vrais calculs, et des contenus d'exemple. Rien n'est
+ * enregistré ni envoyé.
  */
 class AccueilRepositoryFictif(
     horloge: Clock = Clock.systemDefaultZone(),
     private val latenceMs: Long = 400,
 ) : AccueilRepository {
 
-    private val etat = MutableStateFlow(exemple(LocalDate.now(horloge)))
+    private val aujourdhui = LocalDate.now(horloge)
 
-    override fun donnees(): Flow<DonneesAccueil> = etat.onStart { delay(latenceMs) }
+    private val local = AccueilRepositoryLocal(
+        cycles = CycleRepositoryLocal(SourceCyclesMemoire(historiqueExemple(aujourdhui))),
+        horloge = horloge,
+        jours = flowOf(aujourdhui),
+    )
 
-    override suspend fun basculerRegles() {
-        etat.update { donnees ->
-            val cycle = donnees.cycle ?: return@update donnees
-            val nouveau = if (cycle.reglesEnCours) {
-                cycle.copy(reglesEnCours = false, phase = PhaseCycle.Folliculaire, jour = 6)
-            } else {
-                cycle.copy(reglesEnCours = true, phase = PhaseCycle.Menstruelle, jour = 1)
-            }
-            donnees.copy(cycle = nouveau)
-        }
-    }
+    override fun donnees(): Flow<DonneesAccueil> = local.donnees().onStart { delay(latenceMs) }
+
+    override suspend fun basculerRegles(): ResultatBascule = local.basculerRegles()
 
     private companion object {
-        val Segments = listOf(
-            SegmentCycle(PhaseCycle.Menstruelle, 1, 5),
-            SegmentCycle(PhaseCycle.Folliculaire, 6, 13),
-            SegmentCycle(PhaseCycle.Ovulatoire, 14, 16),
-            SegmentCycle(PhaseCycle.Luteale, 17, 28),
-        )
-
-        fun exemple(aujourdhui: LocalDate) = DonneesAccueil(
-            prenom = "Mymy",
-            prenomPartenaire = "Yassine",
-            aujourdhui = aujourdhui,
-            cycle = ResumeCycle(
-                phase = PhaseCycle.Luteale,
-                jour = 22,
-                segments = Segments,
-                prochainesRegles = aujourdhui.plusDays(6)..aujourdhui.plusDays(9),
-                reglesEnCours = false,
-            ),
-            dernierMessage = ApercuMessage(
-                auteur = "Yassine",
-                heure = LocalTime.of(8, 12),
-                texte = "Je passe prendre du pain en rentrant. Tu veux autre chose ?",
-                nonLus = 2,
-            ),
-            prochainEvenement = ApercuEvenement(
-                titre = "Dîner chez Léa et Karim",
-                jour = aujourdhui,
-                heure = LocalTime.of(19, 30),
-                lieu = "Lyon 6e",
-            ),
-            notesEpinglees = listOf(
-                ApercuNote("courses", "Courses", "Lait, œufs, tomates, café"),
-                ApercuNote("week-end", "Idées de week-end", "Annecy, marché de Noël, rando au Salève"),
-                ApercuNote("maison", "Maison", "Appeler le plombier avant jeudi"),
-            ),
-        )
+        /** Trois cycles de 28 jours avec des règles de 5 jours, le dernier commencé il y a 21 jours. */
+        fun historiqueExemple(aujourdhui: LocalDate): List<CycleSaisi> {
+            val debutCourant = aujourdhui.minusDays(21)
+            return (3 downTo 0).map { i ->
+                val debut = debutCourant.minusDays(28L * i)
+                CycleSaisi(id = 4L - i, debut = debut, finRegles = debut.plusDays(4))
+            }
+        }
     }
 }
+
+/** Contenus d'exemple des blocs qui n'ont pas encore de module (messages, calendrier, notes). */
+internal fun contenuFictifAccueil(aujourdhui: LocalDate) = DonneesAccueil(
+    prenom = "Mymy",
+    prenomPartenaire = "Yassine",
+    aujourdhui = aujourdhui,
+    cycle = null,
+    dernierMessage = ApercuMessage(
+        auteur = "Yassine",
+        heure = LocalTime.of(8, 12),
+        texte = "Je passe prendre du pain en rentrant. Tu veux autre chose ?",
+        nonLus = 2,
+    ),
+    prochainEvenement = ApercuEvenement(
+        titre = "Dîner chez Léa et Karim",
+        jour = aujourdhui,
+        heure = LocalTime.of(19, 30),
+        lieu = "Lyon 6e",
+    ),
+    notesEpinglees = listOf(
+        ApercuNote("courses", "Courses", "Lait, œufs, tomates, café"),
+        ApercuNote("week-end", "Idées de week-end", "Annecy, marché de Noël, rando au Salève"),
+        ApercuNote("maison", "Maison", "Appeler le plombier avant jeudi"),
+    ),
+)

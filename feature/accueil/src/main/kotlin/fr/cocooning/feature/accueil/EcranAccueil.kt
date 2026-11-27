@@ -58,13 +58,7 @@ fun AccueilRoute(
     EcranAccueil(
         etat = etat,
         actions = actions,
-        onBasculerRegles = {
-            val enCours = (etat as? AccueilUiState.Pret)?.donnees?.cycle?.reglesEnCours == true
-            viewModel.basculerRegles()
-            actions.onAnnoncer(
-                if (enCours) "C'est noté : fin des règles aujourd'hui." else "C'est noté : début des règles aujourd'hui.",
-            )
-        },
+        onBasculerRegles = { viewModel.basculerRegles(actions.onAnnoncer) },
         modifier = modifier,
         margeBas = margeBas,
     )
@@ -185,23 +179,27 @@ private fun ContenuAccueil(
 
 @Composable
 private fun BlocCycle(cycle: ResumeCycle, onOuvrirCycle: () -> Unit, onBasculerRegles: () -> Unit) {
-    PhaseCard(
-        phase = cycle.phase,
-        titre = "${cycle.phase.nom}, jour ${cycle.jour}",
-        onClick = onOuvrirCycle,
-    ) {
-        Text(
-            text = if (cycle.reglesEnCours) {
-                "Règles en cours. Pense à indiquer quand elles se terminent."
-            } else {
-                "Prochaines règles ${fourchette(cycle.prochainesRegles)}."
-            },
-            style = MaterialTheme.typography.bodyMedium,
-        )
+    when (cycle) {
+        ResumeCycle.PremiereSaisie -> CocoCard(
+            titre = "Suivi du cycle",
+            icone = CocoIcons.Goutte,
+            onClick = onOuvrirCycle,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(text = textePremiereSaisie(), style = MaterialTheme.typography.bodyMedium)
+        }
+        is ResumeCycle.Suivi -> PhaseCard(
+            phase = cycle.phase,
+            titre = "${cycle.phase.nom}, jour ${cycle.jour}",
+            onClick = onOuvrirCycle,
+        ) {
+            Text(text = texteCycle(cycle), style = MaterialTheme.typography.bodyMedium)
+        }
     }
+    val enCours = (cycle as? ResumeCycle.Suivi)?.reglesEnCours == true
     // Seule action principale de l'écran (EF-CYC-01 : en un geste depuis l'accueil).
     CocoButton(
-        texte = if (cycle.reglesEnCours) "Mes règles sont finies" else "Mes règles ont commencé",
+        texte = if (enCours) "Mes règles sont finies" else "Mes règles ont commencé",
         onClick = onBasculerRegles,
         icone = CocoIcons.Goutte,
         modifier = Modifier.fillMaxWidth(),

@@ -33,3 +33,20 @@ internal fun jourRelatif(jour: LocalDate, aujourdhui: LocalDate): String = when 
     aujourdhui.plusDays(1) -> "Demain"
     else -> jourComplet(jour)
 }
+
+/** Invitation affichée tant qu'aucune règle n'a été saisie. */
+internal fun textePremiereSaisie(): String =
+    "Touche le bouton ci-dessous le premier jour de tes règles. Les prévisions partent d'un cycle " +
+        "de 28 jours et s'ajustent à tes vraies dates au fil des cycles."
+
+/** Phrase sous le titre de la carte de phase. Toute prévision est dite estimée (risque R5). */
+internal fun texteCycle(cycle: ResumeCycle.Suivi): String = when {
+    cycle.reglesEnCours -> "Règles en cours. Pense à indiquer quand elles se terminent."
+    cycle.joursDeRetard > 0 -> "Règles attendues ${fourchette(cycle.prochainesRegles)}, pas encore indiquées."
+    cycle.finOubliee ->
+        "Fin des règles non indiquée, estimée à ${jours(cycle.dureeRegles)}. " +
+            "Prochaines règles estimées ${fourchette(cycle.prochainesRegles)}."
+    else -> "Prochaines règles estimées ${fourchette(cycle.prochainesRegles)}."
+}
+
+private fun jours(n: Int) = if (n == 1) "1 jour" else "$n jours"
