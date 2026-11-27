@@ -1,6 +1,6 @@
 # ADR 0001 : chaîne d'alerte S.O.S sur le téléphone récepteur
 
-- Statut : **proposée**, à valider par la MOA après les essais du prototype sur le S25+ et l'OPPO
+- Statut : **acceptée** par la MOA (Yassine) le 27/11/2026 : option A « en bonus », repli sur B
 - Date : 27/11/2026
 - Exigences : EF-SOS-03 à 08, EF-NTF-05 et 07, ENF-EVO-03 ; risques R1, R2, R7, R12
 - Preuves : `docs/prototype-sos.md`
@@ -33,10 +33,18 @@ plus changer d'elle-même l'état global du Ne pas déranger.
 5. **Pas de dépendance aux services Google pour la position** : `LocationManager` (fournisseur
    `fused` d'Android 12+, sinon GPS), compatible /e/OS ; carte osmdroid côté récepteur.
 
-## Point ouvert à trancher par la MOA
+## Ne pas déranger : option A « en bonus », repli sur B
 
-Sur Android 17 (émulateur), `setRingerMode(NORMAL)` avec l'accès Ne pas déranger fait aussi
-sortir du Ne pas déranger, silence total compris. Deux options :
+Avec l'accès Ne pas déranger, `setRingerMode(NORMAL)` fait sortir du Ne pas déranger sur Android
+d'origine (émulateur Android 17, silence total compris), mais pas sur One UI 9 (S25+, mode
+prioritaire : le Ne pas déranger reste actif ; silence total encore à essayer).
+
+**Décision de la MOA (27/11/2026)** : A en bonus. Le même code tourne partout ; quand le
+téléphone accepte, l'alerte traverse même le silence total, et quand il refuse, on retombe sur B
+sans rien casser. Le levier n'est jamais une raison de sauter les exceptions Alarmes et
+Cocooning dans le Ne pas déranger : l'assistant continue de les exiger.
+
+Rappel des deux options étudiées :
 
 - **A, garder ce levier** (recommandé si One UI se comporte pareil) : le S.O.S traverse même le
   silence total, à condition que l'utilisateur ait donné l'accès Ne pas déranger. L'écran
@@ -48,8 +56,8 @@ sortir du Ne pas déranger, silence total compris. Deux options :
 ## Conséquences
 
 - Le cahier, section 6.2, est à corriger sur deux points : l'hypothèse sur `setBypassDnd` est
-  confirmée (il faut recréer le canal), et « Ce qui ne marche plus » est trop pessimiste si
-  l'option A est retenue.
+  confirmée (il faut recréer le canal), et « Ce qui ne marche plus » est trop pessimiste sur
+  Android d'origine, mais exact sur One UI.
 - La voie FCM impose un projet Firebase et une clé de compte de service sur le serveur, jamais
   dans le dépôt (ENF-SEC-11).
 - Les essais hebdomadaires en mode TEST restent la seule preuve pour les réglages que l'appli ne
