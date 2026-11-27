@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Fond sombre avant le premier dessin Compose, pour éviter un éclair blanc. -->
+    <style name="Theme.Cocooning" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">#FF15111E</item>
+    </style>
+</resources>
