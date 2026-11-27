@@ -6,12 +6,14 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -75,6 +77,9 @@ import kotlin.math.ceil
  * @param nomPartenaire prénom annoncé par TalkBack (« Maintenir trois secondes pour alerter Yassine »).
  * @param onDeclenche appelé une seule fois, à la fin du compte à rebours de 5 s, s'il n'a pas été annulé.
  * @param onAnnule appelé quand l'utilisateur annule pendant le compte à rebours.
+ * @param alignement position du disque au-dessus du texte d'annulation, plus large que lui.
+ * `Alignment.End` quand le bouton flotte en bas à droite : le disque ne bouge pas sous le doigt
+ * quand « Envoi de l'alerte à … » apparaît.
  */
 @Composable
 fun SosButton(
@@ -82,6 +87,7 @@ fun SosButton(
     onDeclenche: () -> Unit,
     modifier: Modifier = Modifier,
     onAnnule: () -> Unit = {},
+    alignement: Alignment.Horizontal = Alignment.CenterHorizontally,
 ) {
     val maintien = remember { Animatable(0f) }
     val decompte = remember { Animatable(0f) }
@@ -126,7 +132,7 @@ fun SosButton(
         annuler()
     }
 
-    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(modifier = modifier, horizontalAlignment = alignement) {
         SosDisque(
             maintien = maintien.value,
             decompte = if (enAnnulation) decompte.value else null,
@@ -186,15 +192,15 @@ fun SosButton(
         if (enAnnulation) {
             ZoneAnnulation(nomPartenaire = nomPartenaire, onAnnuler = annulerEnvoi)
         } else if (message != null) {
-            Text(
-                text = message.orEmpty(),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .padding(top = Dimens.Space2)
-                    .semantics { liveRegion = LiveRegionMode.Polite },
-            )
+            PanneauSos {
+                Text(
+                    text = message.orEmpty(),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                )
+            }
         }
     }
 }
@@ -204,14 +210,13 @@ private const val DureeMessage = 3_000L
 /** Sous le disque pendant les 5 s : phrase annoncée par TalkBack et bouton « Annuler l'envoi ». */
 @Composable
 private fun ZoneAnnulation(nomPartenaire: String, onAnnuler: () -> Unit) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    PanneauSos {
         Text(
             text = "Envoi de l'alerte à $nomPartenaire",
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.Center,
             modifier = Modifier
-                .padding(top = Dimens.Space2)
                 .semantics {
                     liveRegion = LiveRegionMode.Assertive
                     contentDescription = "Envoi de l'alerte à $nomPartenaire dans cinq secondes. " +
@@ -224,6 +229,26 @@ private fun ZoneAnnulation(nomPartenaire: String, onAnnuler: () -> Unit) {
             style = CocoButtonStyle.Contour,
             compact = true,
             modifier = Modifier.padding(top = Dimens.Space2),
+        )
+    }
+}
+
+/**
+ * Fond `surface` arrondi sous les textes du bouton : quand le bouton flotte au-dessus du contenu,
+ * « Annuler l'envoi » et les messages restent lisibles au lieu de se superposer au texte voisin.
+ */
+@Composable
+private fun PanneauSos(contenu: @Composable ColumnScope.() -> Unit) {
+    Surface(
+        color = CocooningTheme.cocoon.surface,
+        shape = MaterialTheme.shapes.large,
+        shadowElevation = Dimens.Elevation2,
+        modifier = Modifier.padding(top = Dimens.Space2),
+    ) {
+        Column(
+            modifier = Modifier.padding(horizontal = Dimens.Space4, vertical = Dimens.Space3),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            content = contenu,
         )
     }
 }

@@ -109,6 +109,7 @@ flowchart LR
 |---|---|
 | `app/` | L'application Android |
 | `core/designsystem/` | Thème et composants |
+| `feature/accueil/` | Écran d'accueil : état, ViewModel, interface |
 | `docs/` | Cahier des charges et décisions |
 | `config/` | Modèles de configuration |
 
