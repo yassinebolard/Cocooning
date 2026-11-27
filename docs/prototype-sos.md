@@ -104,7 +104,10 @@ Essais faits depuis le PC, écran éteint, application en arrière-plan, sans ex
 |---|---|
 | Essai local, vibreur, accès Ne pas déranger et exemption batterie accordés | **Sonne** : mode vibreur repassé en sonnerie, volume alarme passé de 3 à 15/15, « J'ai vu » coupe le son |
 | Canal créé sans l'accès Ne pas déranger | `mBypassDnd=false` (relevé par `dumpsys notification`) : hypothèse du cahier confirmée |
-| Essais 2 à 8 par le réseau | à faire (étapes envoyées à Yassine) |
+| Par ntfy, silencieux, Ne pas déranger prioritaire (alarmes permises), 27/11 18:23 | **Sonne** : reçue en 0,5 s, mode sonnerie rétabli, volume 15/15. **Le Ne pas déranger reste actif** : contrairement à l'émulateur, One UI ne le lève pas avec `setRingerMode` |
+| Par ntfy, silencieux, Ne pas déranger désactivé, 27/11 18:25 | **Sonne** : reçue en 0,8 s |
+| Émetteur, position | point frais en 1,2 s, ±14 m (fournisseur `fused`) ; accusés « reçue » 0,5 s et « vue » 4,9 s |
+| Silence total, nuit complète, économie d'énergie | à faire |
 
 ### OPPO Reno 8 Lite, ColorOS 12
 
@@ -133,7 +136,9 @@ Ne pas déranger **désactive aussi le Ne pas déranger de l'utilisateur, même 
 C'est plus que ce que le cahier croyait possible depuis Android 15 (6.2 « Ce qui ne marche
 plus »). C'est efficace pour un S.O.S, mais c'est un effet de bord fort, et le rétablissement
 n'est pas exact : `setInterruptionFilter` crée une règle propre à l'appli, et le silence total
-d'origine revient en « prioritaire ». À vérifier sur One UI avant de s'appuyer dessus.
+d'origine revient en « prioritaire ». Sur le S25+ (One UI 9), le même appel **ne lève pas** le
+Ne pas déranger prioritaire : le comportement dépend donc du constructeur. Silence total sur
+One UI encore à essayer.
 
 **Ne marche pas, ou pas sans geste de l'utilisateur**
 
