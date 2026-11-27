@@ -36,8 +36,14 @@ composants `MessageBubble` et `MessageComposer` dans le design système.
   (pas de Play Store) : il suffit de placer le code de Cocooning sous AGPL-3.0, ce qui ne change
   rien à l'usage du couple. Si un jour Cocooning était vendu en code fermé, il faudrait changer
   de bibliothèque. **Question 1 pour la MOA.**
-- Poids : environ 5 à 10 Mo de bibliothèque native par architecture (à mesurer) ; on ne livre
-  que `arm64-v8a` (S25+ et OPPO Reno 8 Lite) et `x86_64` (émulateur).
+- Poids : la bibliothèque native fait 125 Mo par architecture **avant** retrait des symboles de
+  débogage (mesuré sur la 0.108.7) ; l'APK doit donc être construit avec le NDK pour que ces
+  symboles soient retirés, et ne livrer que `arm64-v8a` (S25+ et OPPO Reno 8 Lite) et `x86_64`
+  (émulateur). La variante `libsignal_jni_testing.so` et les bibliothèques de bureau du jar
+  `libsignal-client` (macOS, Linux, Windows) sont à exclure de l'APK, comme le fait Signal.
+- Distribution : libsignal n'est publiée que sur le dépôt Maven de Signal
+  (`build-artifacts.signal.org`), déclaré dans `settings.gradle.kts` pour le seul groupe
+  `org.signal`. Elle exige le « desugaring » de la bibliothèque Java dans les modules Android.
 - Le serveur ne dépend pas de libsignal : il range des paquets de clés publiques et des blobs.
 
 ### 2. Clés par appareil
@@ -172,10 +178,31 @@ Signal : écriture en file d'attente, états d'envoi, accusés par destinataire,
 réactions, suppression pour soi ou pour les deux, réception idempotente. Les destinataires sont
 une liste dès la V1 (ENF-EVO-02).
 
+## Deuxième jalon (fait)
+
+Module `:core:chiffrement` avec libsignal 0.108.7, licence AGPL-3.0 (`LICENSE` à la racine) :
+
+- `MoteurSignal` : identité du téléphone, clés à publier (pré-clé signée et Kyber renouvelées
+  tous les 7 jours, les deux précédentes gardées ; 100 pré-clés uniques rechargées sous 20),
+  ouverture de session depuis le paquet du serveur, chiffrement, déchiffrement, code de sécurité
+  en 60 chiffres et QR code. Seuls des octets entrent et sortent : aucun type libsignal ne fuit.
+- Confiance au premier usage. Une identité différente est acceptée mais signalée
+  (`ChangementIdentite.Changee`, pour prévenir « le code de sécurité a changé ») ; un message
+  falsifié qui échoue ne remplace jamais l'identité retenue.
+- Messages complétés à un multiple de 160 octets avant chiffrement (`Rembourrage`).
+- Rejeu refusé (`MessageEnDouble`), y compris une ouverture de session sans pré-clé unique,
+  grâce au registre des usages de la pré-clé Kyber de dernier recours.
+- Stockage `cocooning_signal.db` (Room + SQLCipher), hors sauvegarde. Règles écrites une fois
+  (`MagasinSignal`) au-dessus d'un stockage d'octets (`StockageSignal`), en mémoire pour les tests.
+- Tests : 21 tests JVM avec le vrai libsignal natif (deux téléphones simulés, désordre, rejeu,
+  falsification, paquet mal signé, changement de téléphone, renouvellement), et un test
+  instrumenté sur l'émulateur avec la base Room et la bibliothèque Android.
+
 ## Reste
 
-1. Fichier `LICENSE` AGPL-3.0 à la racine du dépôt, avec l'arrivée de libsignal.
-2. `:core:chiffrement` : libsignal, stockage des clés, code de sécurité, tests d'aller-retour.
+1. Brancher `:core:chiffrement` dans l'appli : desugaring, exclusions de l'APK et NDK (voir
+   « Poids »), mesure de la taille de l'APK.
+2. Format Protobuf du contenu en clair (section 4) entre `:core:messagerie` et le chiffrement.
 3. Serveur Ktor : comptes et appareils, paquets de pré-clés, boîtes aux lettres, WebSocket,
    blobs par morceaux, purge à 30 jours.
 4. Transport côté appli : file de sortie (réactions, suppressions, accusés), WorkManager,

@@ -1,0 +1,271 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "fe0c1dcb1303fac77eeeeb247b3d2829",
+    "entities": [
+      {
+        "tableName": "identite_locale",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `paire` BLOB NOT NULL, `id_enregistrement` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "paire",
+            "columnName": "paire",
+            "affinity": "BLOB",
+            "notNull": true
+          },
+          {
+            "fieldPath": "idEnregistrement",
+            "columnName": "id_enregistrement",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "identites",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`nom` TEXT NOT NULL, `appareil` INTEGER NOT NULL, `cle` BLOB NOT NULL, PRIMARY KEY(`nom`, `appareil`))",
+        "fields": [
+          {
+            "fieldPath": "nom",
+            "columnName": "nom",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "appareil",
+            "columnName": "appareil",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cle",
+            "columnName": "cle",
+            "affinity": "BLOB",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "nom",
+            "appareil"
+          ]
+        }
+      },
+      {
+        "tableName": "pre_cles",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `enregistrement` BLOB NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "enregistrement",
+            "columnName": "enregistrement",
+            "affinity": "BLOB",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "pre_cles_signees",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `enregistrement` BLOB NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "enregistrement",
+            "columnName": "enregistrement",
+            "affinity": "BLOB",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "pre_cles_kyber",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER NOT NULL, `enregistrement` BLOB NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "enregistrement",
+            "columnName": "enregistrement",
+            "affinity": "BLOB",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "usages_kyber",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id_kyber` INTEGER NOT NULL, `id_signee` INTEGER NOT NULL, `cle_de_base` BLOB NOT NULL, PRIMARY KEY(`id_kyber`, `id_signee`, `cle_de_base`))",
+        "fields": [
+          {
+            "fieldPath": "idKyber",
+            "columnName": "id_kyber",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "idSignee",
+            "columnName": "id_signee",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "cleDeBase",
+            "columnName": "cle_de_base",
+            "affinity": "BLOB",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id_kyber",
+            "id_signee",
+            "cle_de_base"
+          ]
+        }
+      },
+      {
+        "tableName": "sessions",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`nom` TEXT NOT NULL, `appareil` INTEGER NOT NULL, `enregistrement` BLOB NOT NULL, PRIMARY KEY(`nom`, `appareil`))",
+        "fields": [
+          {
+            "fieldPath": "nom",
+            "columnName": "nom",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "appareil",
+            "columnName": "appareil",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "enregistrement",
+            "columnName": "enregistrement",
+            "affinity": "BLOB",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "nom",
+            "appareil"
+          ]
+        }
+      },
+      {
+        "tableName": "cles_expediteur",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`nom` TEXT NOT NULL, `appareil` INTEGER NOT NULL, `distribution` TEXT NOT NULL, `enregistrement` BLOB NOT NULL, PRIMARY KEY(`nom`, `appareil`, `distribution`))",
+        "fields": [
+          {
+            "fieldPath": "nom",
+            "columnName": "nom",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "appareil",
+            "columnName": "appareil",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "distribution",
+            "columnName": "distribution",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "enregistrement",
+            "columnName": "enregistrement",
+            "affinity": "BLOB",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "nom",
+            "appareil",
+            "distribution"
+          ]
+        }
+      },
+      {
+        "tableName": "compteurs",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`nom` TEXT NOT NULL, `valeur` INTEGER NOT NULL, PRIMARY KEY(`nom`))",
+        "fields": [
+          {
+            "fieldPath": "nom",
+            "columnName": "nom",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "valeur",
+            "columnName": "valeur",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "nom"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'fe0c1dcb1303fac77eeeeb247b3d2829')"
+    ]
+  }
+}

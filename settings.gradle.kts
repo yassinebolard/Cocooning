@@ -19,6 +19,12 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        // libsignal n'est publiée que sur le dépôt de Signal (ADR 0003). Ce dépôt ne sert qu'au
+        // groupe org.signal, et ce groupe ne vient que de lui.
+        exclusiveContent {
+            forRepository { maven("https://build-artifacts.signal.org/libraries/maven/") }
+            filter { includeGroup("org.signal") }
+        }
     }
 }
 
@@ -28,6 +34,7 @@ include(":core:designsystem")
 include(":core:cycle")
 include(":core:securite")
 include(":core:messagerie")
+include(":core:chiffrement")
 include(":feature:cycle")
 include(":feature:accueil")
 include(":feature:sauvegarde")
