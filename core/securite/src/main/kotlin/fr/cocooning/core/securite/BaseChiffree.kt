@@ -38,7 +38,7 @@ object BaseChiffree {
     /** Charge SQLCipher, obtient la phrase de passe et met la base existante en état d'être ouverte. */
     private fun preparer(context: Context, nomBase: String): ByteArray {
         System.loadLibrary("sqlcipher")
-        val coffre = CoffreCles(File(context.noBackupFilesDir, "cles"))
+        val coffre = coffre(context)
         val base = context.getDatabasePath(nomBase)
         val existante = coffre.lire(nomBase)
 
@@ -98,6 +98,52 @@ object BaseChiffree {
         FichierBase.supprimer(base)
         check(provisoire.renameTo(base)) { "Impossible de remplacer la base en clair" }
         Log.i(JOURNAL, "Base ${base.name} chiffrée ($objets tables et index).")
+    }
+
+    internal fun coffre(context: Context) = CoffreCles(File(context.noBackupFilesDir, "cles"))
+
+    /**
+     * Copie cohérente de la base ouverte [ouverte] dans [cible], chiffrée avec la même phrase de
+     * passe, sans fermer Room : `sqlcipher_export` lit la base dans une seule transaction.
+     * Rend la phrase de passe, que la sauvegarde emporte avec la copie.
+     */
+    internal fun instantane(context: Context, nomBase: String, ouverte: SupportSQLiteDatabase, cible: File): ByteArray {
+        val phrase = coffre(context).lire(nomBase) ?: error("Phrase de passe de $nomBase introuvable")
+        require(PhraseDePasse.estHexadecimale(phrase)) { "Phrase de passe inattendue" }
+        FichierBase.supprimer(cible)
+        val chemin = cible.path.replace("'", "''")
+        val version = ouverte.version
+        ouverte.execSQL("ATTACH DATABASE '$chemin' AS instantane KEY '${String(phrase, Charsets.US_ASCII)}'")
+        try {
+            ouverte.query("SELECT sqlcipher_export('instantane')").use { it.moveToFirst() }
+            ouverte.execSQL("PRAGMA instantane.user_version = $version")
+        } finally {
+            ouverte.execSQL("DETACH DATABASE instantane")
+        }
+        return phrase
+    }
+
+    /**
+     * Remplace la base [nomBase] par la copie [octets] venue d'une sauvegarde, et enregistre sa
+     * phrase de passe sous la clé du Keystore de ce téléphone. La base doit être fermée (Room
+     * fermé, ou pas encore ouvert). La copie est relue avant de remplacer quoi que ce soit.
+     */
+    internal fun restaurer(context: Context, nomBase: String, octets: ByteArray, phrase: ByteArray) {
+        System.loadLibrary("sqlcipher")
+        val base = context.getDatabasePath(nomBase).also { it.parentFile?.mkdirs() }
+        val provisoire = File(base.path + ".restauration")
+        FichierBase.supprimer(provisoire)
+        provisoire.writeBytes(octets)
+        val copie = SQLiteDatabase.openDatabase(provisoire.path, phrase, null, SQLiteDatabase.OPEN_READONLY, null, null)
+        try {
+            check(nombreObjets(copie) > 0) { "Copie de $nomBase vide" }
+        } finally {
+            copie.close()
+        }
+        FichierBase.supprimer(base)
+        check(provisoire.renameTo(base)) { "Impossible de remettre en place $nomBase" }
+        coffre(context).enregistrer(nomBase, phrase)
+        Log.i(JOURNAL, "Base $nomBase restaurée depuis une sauvegarde.")
     }
 
     private fun nombreObjets(base: SQLiteDatabase): Int =

@@ -17,6 +17,7 @@ import androidx.room.TypeConverters
 import androidx.room.Update
 import androidx.room.Upsert
 import androidx.room.withTransaction
+import androidx.sqlite.db.SupportSQLiteDatabase
 import fr.cocooning.core.cycle.domaine.Contraception
 import fr.cocooning.core.cycle.domaine.CycleSaisi
 import fr.cocooning.core.cycle.domaine.ParametresCycle
@@ -108,6 +109,9 @@ abstract class BaseCycle : RoomDatabase() {
             Room.databaseBuilder(context.applicationContext, BaseCycle::class.java, NOM)
                 .openHelperFactory(BaseChiffree.fabrique(context, NOM))
                 .build()
+
+        /** Accès à la base ouverte pour la sauvegarde (EF-CPT-08), sans exposer Room aux appelants. */
+        fun pourSauvegarde(base: BaseCycle): () -> SupportSQLiteDatabase = { base.openHelper.writableDatabase }
     }
 }
 

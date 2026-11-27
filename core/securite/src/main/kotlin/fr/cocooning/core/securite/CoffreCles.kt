@@ -1,15 +1,8 @@
 package fr.cocooning.core.securite
 
-import android.security.keystore.KeyGenParameterSpec
-import android.security.keystore.KeyProperties
 import android.util.AtomicFile
 import java.io.File
-import java.security.KeyStore
 import java.security.SecureRandom
-import javax.crypto.Cipher
-import javax.crypto.KeyGenerator
-import javax.crypto.SecretKey
-import javax.crypto.spec.GCMParameterSpec
 
 /**
  * Phrases de passe des bases locales, une par base (ENF-SEC-02, ENF-SEC-04).
@@ -19,9 +12,12 @@ import javax.crypto.spec.GCMParameterSpec
  * Seule l'enveloppe est écrite, dans `no_backup/cles/`, que les sauvegardes Android ignorent.
  *
  * Copier l'enveloppe sur un autre téléphone ne sert à rien : la clé du Keystore n'y est pas.
- * Le changement de téléphone passera par la sauvegarde chiffrée de EF-CPT-08.
+ * Le changement de téléphone passe par la sauvegarde chiffrée de EF-CPT-08 ([fr.cocooning.core.securite.sauvegarde.SauvegardeCocooning]).
  */
-internal class CoffreCles(private val dossier: File) {
+internal class CoffreCles(
+    private val dossier: File,
+    private val chiffreur: Chiffreur = ChiffreurKeystore(ALIAS),
+) {
 
     /** Phrase de passe existante de [nomBase], ou nulle si elle n'existe pas ou n'est plus lisible. */
     fun lire(nomBase: String): ByteArray? {
@@ -37,8 +33,13 @@ internal class CoffreCles(private val dossier: File) {
     }
 
     /** Crée et enregistre une nouvelle phrase de passe pour [nomBase], en remplaçant l'ancienne. */
-    fun creer(nomBase: String): ByteArray {
-        val phrase = PhraseDePasse.nouvelle(SecureRandom())
+    fun creer(nomBase: String): ByteArray = PhraseDePasse.nouvelle(SecureRandom()).also { enregistrer(nomBase, it) }
+
+    /**
+     * Enregistre [phrase] pour [nomBase], enveloppée par la clé du Keystore de ce téléphone.
+     * Sert aussi à la restauration d'une sauvegarde : la phrase vient alors de l'ancien téléphone.
+     */
+    fun enregistrer(nomBase: String, phrase: ByteArray) {
         val fichier = AtomicFile(fichier(nomBase).also { it.parentFile?.mkdirs() })
         val flux = fichier.startWrite()
         try {
@@ -48,68 +49,18 @@ internal class CoffreCles(private val dossier: File) {
             fichier.failWrite(flux)
             throw e
         }
-        return phrase
     }
 
-    private fun fichier(nomBase: String) = File(dossier, "$nomBase.cle")
+    private fun fichier(nomBase: String) = File(dossier, "$nomBase$SUFFIXE")
 
-    private fun envelopper(phrase: ByteArray): ByteArray {
-        val chiffreur = Cipher.getInstance(TRANSFORMATION)
-        chiffreur.init(Cipher.ENCRYPT_MODE, cleKeystore())
-        return Enveloppe(chiffreur.iv, chiffreur.doFinal(phrase)).versOctets()
-    }
+    private fun envelopper(phrase: ByteArray): ByteArray = chiffreur.chiffrer(phrase)
 
-    private fun ouvrir(octets: ByteArray): ByteArray {
-        val enveloppe = Enveloppe.depuisOctets(octets)
-        val cle = cleKeystoreExistante() ?: error("Clé du Keystore absente")
-        val dechiffreur = Cipher.getInstance(TRANSFORMATION)
-        dechiffreur.init(Cipher.DECRYPT_MODE, cle, GCMParameterSpec(TAILLE_TAG_BITS, enveloppe.iv))
-        return dechiffreur.doFinal(enveloppe.contenu)
-    }
-
-    private fun cleKeystoreExistante(): SecretKey? {
-        val keystore = KeyStore.getInstance(KEYSTORE).apply { load(null) }
-        return keystore.getKey(ALIAS, null) as? SecretKey
-    }
-
-    private fun cleKeystore(): SecretKey = cleKeystoreExistante() ?: KeyGenerator
-        .getInstance(KeyProperties.KEY_ALGORITHM_AES, KEYSTORE)
-        .apply {
-            init(
-                KeyGenParameterSpec.Builder(ALIAS, KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT)
-                    .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
-                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
-                    .setKeySize(256)
-                    .build(),
-            )
-        }
-        .generateKey()
-
-    private companion object {
-        const val KEYSTORE = "AndroidKeyStore"
-        const val ALIAS = "cocooning_bases_locales"
-        const val TRANSFORMATION = "AES/GCM/NoPadding"
-        const val TAILLE_TAG_BITS = 128
-    }
-}
-
-/**
- * Format de l'enveloppe écrite sur le disque : un octet de version, la longueur du vecteur
- * d'initialisation, le vecteur, puis la phrase chiffrée (avec son étiquette GCM).
- */
-internal class Enveloppe(val iv: ByteArray, val contenu: ByteArray) {
-
-    fun versOctets(): ByteArray = byteArrayOf(VERSION, iv.size.toByte()) + iv + contenu
+    private fun ouvrir(octets: ByteArray): ByteArray = chiffreur.dechiffrer(octets)
 
     companion object {
-        const val VERSION: Byte = 1
-
-        fun depuisOctets(octets: ByteArray): Enveloppe {
-            require(octets.size > 2 && octets[0] == VERSION) { "Enveloppe de clé illisible" }
-            val tailleIv = octets[1].toInt()
-            require(tailleIv in 1..32 && octets.size > 2 + tailleIv) { "Enveloppe de clé tronquée" }
-            return Enveloppe(octets.copyOfRange(2, 2 + tailleIv), octets.copyOfRange(2 + tailleIv, octets.size))
-        }
+        /** Alias historique de la clé du Keystore : ne pas changer, les enveloppes existantes en dépendent. */
+        const val ALIAS = "cocooning_bases_locales"
+        private const val SUFFIXE = ".cle"
     }
 }
 
