@@ -7,12 +7,13 @@ import fr.cocooning.core.cycle.donnees.room.BaseCycle
 import fr.cocooning.core.cycle.donnees.room.SourceCyclesRoom
 import fr.cocooning.feature.accueil.AccueilRepository
 import fr.cocooning.feature.accueil.AccueilRepositoryLocal
+import fr.cocooning.feature.cycle.DependancesCycle
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 /**
  * Injection de dépendances à la main : un seul objet, créé par [com.agdc.cocooning.CocooningApplication],
- * qui fournit les dépôts aux ViewModel. Le cycle est stocké sur le téléphone (Room) ; le reste
+ * qui fournit les dépôts aux ViewModel. Le cycle est stocké sur le téléphone (Room chiffré par SQLCipher) ; le reste
  * est encore fictif. Il sera remplacé par Hilt (ou complété) quand les autres données arriveront.
  */
 class ConteneurApp(context: Context) {
@@ -23,6 +24,8 @@ class ConteneurApp(context: Context) {
     val cycle: CycleRepository by lazy { CycleRepositoryLocal(SourceCyclesRoom(baseCycle)) }
 
     val accueil: AccueilRepository by lazy { AccueilRepositoryLocal(cycle) }
+
+    val dependancesCycle: DependancesCycle by lazy { DependancesCycle(cycle) }
 
     /** Nombre de messages non lus, affiché en badge sur l'onglet Messages. Fictif. */
     val messagesNonLus: StateFlow<Int> = MutableStateFlow(2)

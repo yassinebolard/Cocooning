@@ -28,7 +28,6 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.agdc.cocooning.di.ConteneurApp
 import com.agdc.cocooning.navigation.CalendrierCle
-import com.agdc.cocooning.navigation.CycleCle
 import com.agdc.cocooning.navigation.MessagesCle
 import com.agdc.cocooning.navigation.NavigationPrincipale
 import com.agdc.cocooning.navigation.NotesCle
@@ -42,6 +41,17 @@ import fr.cocooning.feature.accueil.AccueilCle
 import fr.cocooning.feature.accueil.AccueilRoute
 import fr.cocooning.feature.accueil.AccueilViewModel
 import fr.cocooning.feature.accueil.ActionsAccueil
+import fr.cocooning.feature.cycle.ActionsCycle
+import fr.cocooning.feature.cycle.AjoutReglesCle
+import fr.cocooning.feature.cycle.ConfigurationRoute
+import fr.cocooning.feature.cycle.ConfigurationViewModel
+import fr.cocooning.feature.cycle.CorrectionCycleCle
+import fr.cocooning.feature.cycle.CorrectionRoute
+import fr.cocooning.feature.cycle.CorrectionViewModel
+import fr.cocooning.feature.cycle.CycleCle
+import fr.cocooning.feature.cycle.CycleRoute
+import fr.cocooning.feature.cycle.CycleViewModel
+import fr.cocooning.feature.cycle.ReglagesCycleCle
 import kotlinx.coroutines.launch
 
 /**
@@ -81,6 +91,17 @@ fun CocooningApp(conteneur: ConteneurApp) {
         onOuvrirNotes = { navigation.ouvrirOnglet(NotesCle) },
         onAnnoncer = annoncer,
     )
+
+    val dependancesCycle = conteneur.dependancesCycle
+    val actionsCycle = ActionsCycle(
+        onCorriger = { id -> navigation.ouvrir(CorrectionCycleCle(id)) },
+        onAjouter = { navigation.ouvrir(AjoutReglesCle) },
+        onReglages = { navigation.ouvrir(ReglagesCycleCle) },
+    )
+    val terminerCycle: (String) -> Unit = { annonce ->
+        annoncer(annonce)
+        navigation.retour()
+    }
 
     Scaffold(
         bottomBar = {
@@ -128,9 +149,39 @@ fun CocooningApp(conteneur: ConteneurApp) {
                     )
                 }
                 entry<CycleCle> {
-                    OngletAVenir(
-                        destination = destinations[2],
-                        message = "Le suivi détaillé de ton cycle arrive bientôt.",
+                    val vm: CycleViewModel = viewModel(factory = CycleViewModel.fabrique(dependancesCycle))
+                    CycleRoute(
+                        viewModel = vm,
+                        configuration = { viewModel(factory = ConfigurationViewModel.fabrique(dependancesCycle)) },
+                        actions = actionsCycle,
+                        margeBas = margeSos,
+                    )
+                }
+                entry<CorrectionCycleCle> { cle ->
+                    val vm: CorrectionViewModel =
+                        viewModel(factory = CorrectionViewModel.fabrique(dependancesCycle, cle.cycleId))
+                    CorrectionRoute(
+                        viewModel = vm,
+                        onTermine = terminerCycle,
+                        onRetour = { navigation.retour() },
+                        margeBas = margeSos,
+                    )
+                }
+                entry<AjoutReglesCle> {
+                    val vm: CorrectionViewModel = viewModel(factory = CorrectionViewModel.fabrique(dependancesCycle, null))
+                    CorrectionRoute(
+                        viewModel = vm,
+                        onTermine = terminerCycle,
+                        onRetour = { navigation.retour() },
+                        margeBas = margeSos,
+                    )
+                }
+                entry<ReglagesCycleCle> {
+                    val vm: ConfigurationViewModel = viewModel(factory = ConfigurationViewModel.fabrique(dependancesCycle))
+                    ConfigurationRoute(
+                        viewModel = vm,
+                        onTermine = { terminerCycle("C'est enregistré. Tes prévisions sont à jour.") },
+                        onRetour = { navigation.retour() },
                         margeBas = margeSos,
                     )
                 }

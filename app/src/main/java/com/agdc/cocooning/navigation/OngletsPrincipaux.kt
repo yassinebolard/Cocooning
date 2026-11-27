@@ -4,6 +4,7 @@ import androidx.navigation3.runtime.NavKey
 import fr.cocooning.designsystem.components.DestinationNav
 import fr.cocooning.designsystem.components.destinationsPrincipales
 import fr.cocooning.feature.accueil.AccueilCle
+import fr.cocooning.feature.cycle.CycleCle
 
 /**
  * Configuration de la barre de navigation : les cinq onglets de premier niveau, dans l'ordre du

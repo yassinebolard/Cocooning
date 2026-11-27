@@ -1,5 +1,6 @@
 package fr.cocooning.core.cycle.donnees
 
+import fr.cocooning.core.cycle.domaine.ConfigurationInitiale
 import fr.cocooning.core.cycle.domaine.CycleSaisi
 import fr.cocooning.core.cycle.domaine.ErreurSaisie
 import fr.cocooning.core.cycle.domaine.OperationCycle
@@ -16,6 +17,45 @@ class CycleRepositoryLocal(private val source: SourceCycles) : CycleRepository {
     override fun historique(): Flow<List<CycleSaisi>> = source.observerCycles()
 
     override fun parametres(): Flow<ParametresCycle> = source.observerParametres().map { it ?: ParametresCycle() }
+
+    override fun parametresDeclares(): Flow<ParametresCycle?> = source.observerParametres()
+
+    override suspend fun configurer(configuration: ConfigurationInitiale, aujourdhui: LocalDate): ResultatSaisie =
+        protege {
+            val cycles = source.cycles()
+            val erreur = SaisiesCycle.validerConfiguration(cycles, configuration, aujourdhui)
+            if (erreur != null) return@protege ResultatSaisie.Refusee(erreur)
+            source.enregistrerParametres(configuration.parametres)
+            configuration.dernieresRegles?.let { debut -> ajouterCycle(debut, configuration.finDernieresRegles) }
+            ResultatSaisie.Enregistree(null)
+        }
+
+    override suspend fun corriger(cycleId: Long, debut: LocalDate, fin: LocalDate?, aujourdhui: LocalDate): ResultatSaisie =
+        protege {
+            val cycles = source.cycles()
+            val erreur = SaisiesCycle.validerCorrection(cycles, cycleId, debut, fin, aujourdhui)
+            if (erreur != null) {
+                ResultatSaisie.Refusee(erreur)
+            } else {
+                source.modifier(CycleSaisi(cycleId, debut, fin))
+                ResultatSaisie.Enregistree(null)
+            }
+        }
+
+    override suspend fun ajouter(debut: LocalDate, fin: LocalDate?, aujourdhui: LocalDate): ResultatSaisie = protege {
+        val erreur = SaisiesCycle.validerNouveauDebut(source.cycles(), debut, aujourdhui, fin)
+        if (erreur != null) {
+            ResultatSaisie.Refusee(erreur)
+        } else {
+            ajouterCycle(debut, fin)
+            ResultatSaisie.Enregistree(null)
+        }
+    }
+
+    private suspend fun ajouterCycle(debut: LocalDate, fin: LocalDate?) {
+        val id = source.ajouter(debut)
+        if (fin != null) source.modifier(CycleSaisi(id, debut, fin))
+    }
 
     override suspend fun basculerRegles(aujourdhui: LocalDate): ResultatSaisie = protege {
         val cycles = source.cycles()

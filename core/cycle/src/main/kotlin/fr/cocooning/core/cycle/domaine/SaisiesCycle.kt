@@ -33,6 +33,15 @@ enum class ErreurSaisie {
 
     /** Le cycle n'existe pas (supprimé entre-temps). */
     CycleInconnu,
+
+    /** Durée habituelle du cycle hors de [CalculateurCycle.CYCLE_PLAUSIBLE]. */
+    DureeCycleHorsLimites,
+
+    /** Durée habituelle des règles hors de [CalculateurCycle.REGLES_PLAUSIBLES]. */
+    DureeReglesHorsLimites,
+
+    /** Une fin des règles sans leur début. */
+    FinSansDebut,
 }
 
 /** Règles de saisie et de correction, sans stockage. */
@@ -56,9 +65,42 @@ object SaisiesCycle {
         }
     }
 
-    /** Vérifie qu'un nouveau cycle peut commencer le [debut]. */
-    fun validerNouveauDebut(historique: List<CycleSaisi>, debut: LocalDate, aujourdhui: LocalDate): ErreurSaisie? =
-        validerCycle(historique, CycleSaisi(id = SANS_ID, debut = debut), aujourdhui)
+    /** Vérifie qu'un nouveau cycle peut commencer le [debut], avec sa [fin] si elle est connue. */
+    fun validerNouveauDebut(
+        historique: List<CycleSaisi>,
+        debut: LocalDate,
+        aujourdhui: LocalDate,
+        fin: LocalDate? = null,
+    ): ErreurSaisie? = validerCycle(historique, CycleSaisi(id = SANS_ID, debut = debut, finRegles = fin), aujourdhui)
+
+    /**
+     * Vérifie la correction des deux dates d'un cycle à la fois. Déplacer des règles de plusieurs
+     * jours passerait sinon par un état intermédiaire refusé (la fin avant le nouveau début).
+     */
+    fun validerCorrection(
+        historique: List<CycleSaisi>,
+        cycleId: Long,
+        debut: LocalDate,
+        fin: LocalDate?,
+        aujourdhui: LocalDate,
+    ): ErreurSaisie? {
+        val cycle = historique.firstOrNull { it.id == cycleId } ?: return ErreurSaisie.CycleInconnu
+        return validerCycle(historique, cycle.copy(debut = debut, finRegles = fin), aujourdhui)
+    }
+
+    /** Vérifie ce que madame renseigne au premier lancement (EF-CYC-02). */
+    fun validerConfiguration(
+        historique: List<CycleSaisi>,
+        configuration: ConfigurationInitiale,
+        aujourdhui: LocalDate,
+    ): ErreurSaisie? {
+        val parametres = configuration.parametres
+        if (parametres.dureeCycle !in CalculateurCycle.CYCLE_PLAUSIBLE) return ErreurSaisie.DureeCycleHorsLimites
+        if (parametres.dureeRegles !in CalculateurCycle.REGLES_PLAUSIBLES) return ErreurSaisie.DureeReglesHorsLimites
+        val debut = configuration.dernieresRegles
+            ?: return if (configuration.finDernieresRegles != null) ErreurSaisie.FinSansDebut else null
+        return validerNouveauDebut(historique, debut, aujourdhui, configuration.finDernieresRegles)
+    }
 
     /** Vérifie la correction du début du cycle [cycleId]. */
     fun validerDebut(historique: List<CycleSaisi>, cycleId: Long, debut: LocalDate, aujourdhui: LocalDate): ErreurSaisie? {

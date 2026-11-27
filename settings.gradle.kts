@@ -26,6 +26,8 @@ rootProject.name = "Cocooning"
 include(":app")
 include(":core:designsystem")
 include(":core:cycle")
+include(":core:securite")
+include(":feature:cycle")
 include(":feature:accueil")
  
 // Prototype S.O.S jetable du jalon J3 (voir docs/prototype-sos.md).

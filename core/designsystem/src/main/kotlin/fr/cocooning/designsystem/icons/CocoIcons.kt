@@ -202,6 +202,13 @@ object CocoIcons {
         }
     }
 
+    /** Diminuer une valeur (compteur de jours). */
+    val Moins: ImageVector by lazy {
+        icone("Moins") {
+            moveTo(5f, 12f); lineTo(19f, 12f)
+        }
+    }
+
     /** Message vocal. */
     val Micro: ImageVector by lazy {
         icone("Micro") {

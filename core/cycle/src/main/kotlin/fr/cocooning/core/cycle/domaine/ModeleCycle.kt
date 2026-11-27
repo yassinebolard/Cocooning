@@ -27,16 +27,53 @@ data class CycleSaisi(
 /**
  * Valeurs déclarées par madame à l'installation (EF-CYC-02), utilisées tant que l'historique
  * ne suffit pas. Par défaut, un cycle de 28 jours et des règles de 5 jours.
+ *
+ * @param contraception déclarée par madame, nulle si elle n'a rien indiqué. Elle n'entre pas
+ * dans les calculs pour l'instant : avec une contraception hormonale, les phases affichées
+ * restent indicatives.
  */
 data class ParametresCycle(
     val dureeCycle: Int = DUREE_CYCLE_PAR_DEFAUT,
     val dureeRegles: Int = DUREE_REGLES_PAR_DEFAUT,
+    val contraception: Contraception? = null,
 ) {
     companion object {
         const val DUREE_CYCLE_PAR_DEFAUT = 28
         const val DUREE_REGLES_PAR_DEFAUT = 5
     }
 }
+
+/**
+ * Contraception déclarée à l'installation (EF-CYC-02). Huit choix au plus, comme le veut la
+ * fiche des puces du design système.
+ *
+ * @param hormonale vrai quand la contraception agit sur l'ovulation : les phases calculées
+ * ne reflètent alors pas un cycle naturel.
+ */
+enum class Contraception(val hormonale: Boolean) {
+    Aucune(false),
+    Preservatif(false),
+    SteriletCuivre(false),
+    Pilule(true),
+    SteriletHormonal(true),
+    Implant(true),
+    AnneauOuPatch(true),
+    Autre(false),
+}
+
+/**
+ * Ce que madame renseigne au premier lancement du suivi (EF-CYC-02).
+ *
+ * @param dernieresRegles premier jour des dernières règles, nul quand l'historique en contient
+ * déjà (il a été saisi depuis l'accueil) ou quand madame ne s'en souvient pas.
+ * @param finDernieresRegles dernier jour de ces règles, nul si elles sont en cours ou si madame
+ * ne s'en souvient pas (la durée est alors estimée).
+ */
+data class ConfigurationInitiale(
+    val dernieresRegles: LocalDate?,
+    val finDernieresRegles: LocalDate?,
+    val parametres: ParametresCycle,
+)
 
 /** Une phase sur les jours du cycle, du jour [premierJour] au jour [dernierJour] inclus (J1 = début des règles). */
 data class SegmentPhase(val phase: Phase, val premierJour: Int, val dernierJour: Int) {
