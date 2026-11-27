@@ -1,10 +1,14 @@
 package com.agdc.cocooning.di
 
 import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import fr.cocooning.core.cycle.donnees.CycleRepository
 import fr.cocooning.core.cycle.donnees.CycleRepositoryLocal
 import fr.cocooning.core.cycle.donnees.room.BaseCycle
 import fr.cocooning.core.cycle.donnees.room.SourceCyclesRoom
+import fr.cocooning.core.securite.PreferencesChiffrees
+import fr.cocooning.core.securite.sauvegarde.SauvegardeCocooning
 import fr.cocooning.feature.accueil.AccueilRepository
 import fr.cocooning.feature.accueil.AccueilRepositoryLocal
 import fr.cocooning.feature.cycle.DependancesCycle
@@ -21,6 +25,24 @@ class ConteneurApp(context: Context) {
 
     private val baseCycle: BaseCycle by lazy { BaseCycle.creer(appContext) }
 
+    /**
+     * Préférences de l'application, chiffrées (ENF-SEC-04). Aucune ancienne SharedPreferences à
+     * migrer à ce jour : `osmdroid.xml` appartient à la bibliothèque de carte et reste en clair.
+     * Une préférence en clair ajoutée par erreur se migre en ajoutant son nom à la liste.
+     */
+    val preferences: DataStore<Preferences> by lazy {
+        PreferencesChiffrees.ouvrir(appContext, NOM_PREFERENCES, anciennesPreferences = emptyList())
+    }
+
+    /** Sauvegarde pour le changement de téléphone (EF-CPT-08). Pas encore d'écran pour la lancer. */
+    val sauvegarde: SauvegardeCocooning by lazy {
+        SauvegardeCocooning(
+            appContext,
+            bases = mapOf(BaseCycle.NOM to BaseCycle.pourSauvegarde(baseCycle)),
+            preferences = mapOf(NOM_PREFERENCES to preferences),
+        )
+    }
+
     val cycle: CycleRepository by lazy { CycleRepositoryLocal(SourceCyclesRoom(baseCycle)) }
 
     val accueil: AccueilRepository by lazy { AccueilRepositoryLocal(cycle) }
@@ -32,4 +54,8 @@ class ConteneurApp(context: Context) {
 
     /** Prénom du partenaire, annoncé par le bouton S.O.S. Fictif. */
     val prenomPartenaire: String = "Yassine"
+
+    private companion object {
+        const val NOM_PREFERENCES = "cocooning_preferences"
+    }
 }

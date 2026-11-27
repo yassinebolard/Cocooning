@@ -56,6 +56,7 @@ dependencies {
     implementation(project(":feature:accueil"))
     implementation(project(":feature:cycle"))
     implementation(project(":core:cycle"))
+    implementation(project(":core:securite"))
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
