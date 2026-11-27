@@ -4,6 +4,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -24,16 +25,20 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import fr.cocooning.designsystem.CocoPreviews
 import fr.cocooning.designsystem.CocoShapes
@@ -61,9 +66,15 @@ fun destinationsPrincipales(nonLus: Int = 0) = listOf(
 )
 
 /**
- * Barre de navigation du bas : fond `surface`, icône et libellé toujours visibles, indicateur
+ * Barre de navigation du bas : fond `surface`, icône et libellé visibles, indicateur
  * `principale-douce` qui change de couleur en 300 ms. Elle fait au moins 80 dp et grandit avec
- * le texte agrandi : le libellé passe sur deux lignes au lieu d'être coupé.
+ * le texte agrandi.
+ *
+ * Dérogation validée au design système (« libellé toujours affiché ») : quand un libellé ne tient
+ * plus dans sa part de largeur (texte agrandi, vers 130 % et toujours à 200 %), il serait coupé au
+ * milieu d'un mot. Seul l'onglet actif garde alors son libellé, sur une ligne, et prend la place
+ * dont il a besoin ; les autres n'affichent que leur icône. TalkBack lit toujours le libellé de
+ * chaque onglet.
  *
  * Écrite à la main (plutôt que `NavigationBar`) parce que celle de Material 3 a une hauteur
  * fixe de 80 dp, contraire à la règle « aucune hauteur fixe autour d'un texte ».
@@ -80,21 +91,35 @@ fun CocoNavigationBar(
         shadowElevation = Dimens.Elevation2,
         modifier = modifier.fillMaxWidth(),
     ) {
-        Row(
-            modifier = Modifier
-                .windowInsetsPadding(WindowInsets.navigationBars)
-                .heightIn(min = Dimens.NavBarHeight)
-                .padding(horizontal = Dimens.Space2, vertical = Dimens.Space2)
-                .selectableGroup(),
-            horizontalArrangement = Arrangement.spacedBy(Dimens.Space1),
-        ) {
-            destinations.forEachIndexed { index, destination ->
-                ItemNavigation(
-                    destination = destination,
-                    selectionne = index == selection,
-                    onClick = { onSelection(index) },
-                    modifier = Modifier.weight(1f),
-                )
+        BoxWithConstraints(Modifier.windowInsetsPadding(WindowInsets.navigationBars)) {
+            val styleLibelle = MaterialTheme.typography.labelSmall
+            val mesureur = rememberTextMeasurer()
+            val densite = LocalDensity.current
+            // Place d'un libellé quand les cinq onglets se partagent la largeur.
+            val nombre = destinations.size.coerceAtLeast(1)
+            val largeurLibelle = (maxWidth - Dimens.Space2 * 2 - Dimens.Space1 * (nombre - 1)) / nombre
+            val compacte = with(densite) {
+                destinations.any { mesureur.measure(it.libelle, styleLibelle).size.width > largeurLibelle.toPx() }
+            }
+            Row(
+                modifier = Modifier
+                    .heightIn(min = Dimens.NavBarHeight)
+                    .padding(horizontal = Dimens.Space2, vertical = Dimens.Space2)
+                    .selectableGroup(),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.Space1),
+            ) {
+                destinations.forEachIndexed { index, destination ->
+                    val selectionne = index == selection
+                    ItemNavigation(
+                        destination = destination,
+                        selectionne = selectionne,
+                        libelleVisible = !compacte || selectionne,
+                        onClick = { onSelection(index) },
+                        // En mode compact, l'onglet actif est mesuré d'abord à la taille de son libellé,
+                        // les autres se partagent le reste.
+                        modifier = if (compacte && selectionne) Modifier else Modifier.weight(1f),
+                    )
+                }
             }
         }
     }
@@ -104,6 +129,7 @@ fun CocoNavigationBar(
 private fun ItemNavigation(
     destination: DestinationNav,
     selectionne: Boolean,
+    libelleVisible: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -122,6 +148,7 @@ private fun ItemNavigation(
             .heightIn(min = Dimens.MinTouchTarget)
             .selectable(selected = selectionne, onClick = onClick, role = Role.Tab)
             .semantics(mergeDescendants = true) {
+                if (!libelleVisible) contentDescription = destination.libelle
                 if (destination.badge > 0) stateDescription = "${destination.badge} non lus"
             },
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -130,15 +157,22 @@ private fun ItemNavigation(
             modifier = Modifier
                 .width(64.dp)
                 .height(32.dp)
-                .clip(CocoShapes.Pilule)
-                .background(fondIndicateur),
+                // Pas de `clip` : le badge déborde de l'indicateur sans être rogné.
+                .background(fondIndicateur, CocoShapes.Pilule),
             contentAlignment = Alignment.Center,
         ) {
             BadgedBox(
                 badge = {
                     if (destination.badge > 0) {
-                        Badge(containerColor = scheme.secondary, contentColor = scheme.onSecondary) {
-                            Text(if (destination.badge > 99) "99+" else destination.badge.toString())
+                        // Le nombre grandit avec le texte jusqu'à 150 % seulement : au-delà, le badge
+                        // couvrirait l'icône voisine. TalkBack l'annonce en entier (« 3 non lus »).
+                        val densite = LocalDensity.current
+                        CompositionLocalProvider(
+                            LocalDensity provides Density(densite.density, densite.fontScale.coerceAtMost(1.5f)),
+                        ) {
+                            Badge(containerColor = scheme.secondary, contentColor = scheme.onSecondary) {
+                                Text(if (destination.badge > 99) "99+" else destination.badge.toString())
+                            }
                         }
                     }
                 },
@@ -151,13 +185,17 @@ private fun ItemNavigation(
                 )
             }
         }
-        Text(
-            text = destination.libelle,
-            style = MaterialTheme.typography.labelSmall,
-            color = couleurTexte,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = Dimens.Space1),
-        )
+        if (libelleVisible) {
+            Text(
+                text = destination.libelle,
+                style = MaterialTheme.typography.labelSmall,
+                color = couleurTexte,
+                textAlign = TextAlign.Center,
+                // Jamais coupé au milieu d'un mot : un mot par ligne au plus.
+                softWrap = false,
+                modifier = Modifier.padding(top = Dimens.Space1),
+            )
+        }
     }
 }
 
@@ -165,8 +203,9 @@ private fun ItemNavigation(
 @Composable
 private fun CocoNavigationBarPreview() {
     CocooningTheme {
-        Column {
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.Space3)) {
             CocoNavigationBar(destinations = destinationsPrincipales(nonLus = 3), selection = 1, onSelection = {})
+            CocoNavigationBar(destinations = destinationsPrincipales(nonLus = 128), selection = 3, onSelection = {})
         }
     }
 }

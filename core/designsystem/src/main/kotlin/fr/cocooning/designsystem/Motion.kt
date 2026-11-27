@@ -22,7 +22,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalInspectionMode
 
-/** Durées du design système, en millisecondes. Rien ne dépasse 450 ms, sauf le maintien S.O.S. */
+/** Durées du design système, en millisecondes. Rien ne dépasse 450 ms, sauf les deux temps du S.O.S. */
 object Durees {
     /** `duree-micro` : retour de pression, couleur d'une puce. */
     const val Micro = 100
@@ -32,8 +32,10 @@ object Durees {
     const val Moyenne = 300
     /** `duree-longue` : transition entre écrans, anneau du cycle. */
     const val Longue = 450
-    /** `duree-maintien-sos` : appui maintenu pour déclencher le S.O.S. */
-    const val MaintienSos = 2000
+    /** `duree-maintien-sos` : appui maintenu pour déclencher le S.O.S (cahier des charges EF-SOS-02). */
+    const val MaintienSos = 3000
+    /** `duree-annulation-sos` : compte à rebours annulable après le maintien, avant l'envoi (EF-SOS-02). */
+    const val AnnulationSos = 5000
 }
 
 /** Courbes du design système. */
@@ -44,7 +46,7 @@ object Courbes {
     val Entree: Easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1f)
     /** `courbe-sortie` : ce qui sort de l'écran. */
     val Sortie: Easing = CubicBezierEasing(0.3f, 0f, 0.8f, 0.15f)
-    /** `courbe-lineaire` : seulement l'anneau de maintien S.O.S, qui montre le temps réel. */
+    /** `courbe-lineaire` : seulement les anneaux du S.O.S (maintien et annulation), qui montrent le temps réel. */
     val Lineaire: Easing = LinearEasing
 }
 
@@ -66,10 +68,14 @@ class CocoMotion(val animationsCoupees: Boolean) {
 
     /**
      * Anneau de maintien S.O.S : il reste animé même mouvement réduit, car il montre le temps
-     * réel du maintien (2 s) et non une décoration.
+     * réel du maintien (3 s) et non une décoration.
      */
     fun <T> maintienSos(): FiniteAnimationSpec<T> =
         tween(durationMillis = Durees.MaintienSos, easing = Courbes.Lineaire)
+
+    /** Anneau du compte à rebours annulable (5 s) : même règle, c'est du temps réel. */
+    fun <T> annulationSos(): FiniteAnimationSpec<T> =
+        tween(durationMillis = Durees.AnnulationSos, easing = Courbes.Lineaire)
 }
 
 val LocalCocoMotion = staticCompositionLocalOf { CocoMotion(animationsCoupees = false) }

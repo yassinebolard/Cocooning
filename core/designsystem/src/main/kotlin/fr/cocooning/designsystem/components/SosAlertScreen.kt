@@ -68,7 +68,10 @@ enum class EtatAlerteRecue {
     /** L'alerte sonne : « J'ai vu, j'arrive » est l'action attendue. */
     Active,
 
-    /** Le partenaire a confirmé : l'émetteur le voit (EF-SOS-07). */
+    /**
+     * Le partenaire a touché « J'ai vu, j'arrive » : la sonnerie est coupée et l'émetteur le voit
+     * (EF-SOS-07). L'alerte reste affichée, avec la carte et les actions, jusqu'à son arrêt.
+     */
     Vue,
 
     /** L'émetteur a arrêté l'alerte avec son code ou sa biométrie (EF-SOS-09). */
@@ -78,6 +81,8 @@ enum class EtatAlerteRecue {
 /**
  * Dernière position connue de l'émetteur (EF-SOS-03, EF-SOS-04).
  *
+ * @param latitude latitude GPS en degrés décimaux (WGS 84).
+ * @param longitude longitude GPS en degrés décimaux (WGS 84).
  * @param adresse adresse approximative ; `null` si elle n'a pas pu être trouvée (la carte montre
  * alors seule le point exact).
  * @param precisionMetres rayon de précision du GPS.
@@ -85,6 +90,8 @@ enum class EtatAlerteRecue {
  */
 @Immutable
 data class PositionAlerte(
+    val latitude: Double,
+    val longitude: Double,
     val adresse: String?,
     val precisionMetres: Int,
     val ageSecondes: Long,
@@ -128,10 +135,15 @@ data class AlerteSosRecue(
  * L'écran ne gère ni la sonnerie, ni le réveil de l'écran, ni l'affichage sur l'écran verrouillé :
  * c'est le rôle de l'activité et du service d'alarme qui l'affichent.
  *
- * @param carte carte de la position, fournie par l'appelant (bibliothèque de carte non choisie).
- * Elle reçoit une hauteur fixe ; `null` la masque.
+ * « J'ai vu, j'arrive » coupe seulement la sonnerie : l'alerte reste affichée (état
+ * [EtatAlerteRecue.Vue]), avec la carte, l'adresse et les boutons d'appel, jusqu'à ce que
+ * l'émetteur l'arrête avec son code (EF-SOS-09).
+ *
+ * @param afficherCarte affiche la carte osmdroid ([CarteAlerteSos]) dès qu'une position est connue.
+ * Elle reçoit une hauteur fixe ; `false` la masque.
  * @param onItineraire ouvre la navigation vers la position ; masqué tant qu'aucune position n'est connue.
- * @param onJaiVu confirme à l'émetteur que l'alerte est vue.
+ * @param onJaiVu coupe la sonnerie et confirme à l'émetteur que l'alerte est vue ; l'appelant
+ * passe ensuite l'alerte à l'état [EtatAlerteRecue.Vue], sans fermer l'écran.
  * @param onFermer ferme l'écran une fois l'alerte terminée.
  */
 @Composable
@@ -143,7 +155,7 @@ fun SosAlertScreen(
     onJaiVu: () -> Unit,
     onFermer: () -> Unit,
     modifier: Modifier = Modifier,
-    carte: (@Composable () -> Unit)? = null,
+    afficherCarte: Boolean = true,
 ) {
     val cocoon = CocooningTheme.cocoon
     val motion = CocooningTheme.motion
@@ -171,14 +183,15 @@ fun SosAlertScreen(
             LigneStatut(alerte)
             EnTete(alerte)
 
-            if (carte != null && alerte.position != null) {
+            val position = alerte.position
+            if (afficherCarte && position != null) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(HauteurCarte)
                         .clip(MaterialTheme.shapes.large)
                         .background(MaterialTheme.colorScheme.surfaceContainerLowest),
-                ) { carte() }
+                ) { CarteAlerteSos(position = position, prenom = prenom) }
             }
 
             BlocPosition(alerte)
@@ -470,7 +483,7 @@ private fun ConfirmationVue(prenom: String) {
     ) {
         Icon(CocoIcons.Coche, contentDescription = null, tint = cocoon.onSosDouce, modifier = Modifier.size(tailleIcone(Dimens.IconSize)))
         Text(
-            text = "$prenom sait que tu as vu l'alerte et que tu arrives.",
+            text = "Sonnerie coupée. $prenom sait que tu as vu l'alerte et que tu arrives.",
             style = MaterialTheme.typography.labelLarge,
             color = cocoon.onSosDouce,
             modifier = Modifier.weight(1f),
@@ -510,28 +523,15 @@ internal fun ageParle(secondes: Long): String {
 private val AlerteExemple = AlerteSosRecue(
     prenom = "Inès",
     ageSecondes = 12,
-    position = PositionAlerte(adresse = "12 rue des Lilas, Lyon 3e", precisionMetres = 4, ageSecondes = 8),
+    position = PositionAlerte(
+        latitude = 45.7578,
+        longitude = 4.8320,
+        adresse = "12 rue des Lilas, Lyon 3e",
+        precisionMetres = 4,
+        ageSecondes = 8,
+    ),
     batteriePourcent = 23,
 )
-
-/** Faux fond de carte pour les aperçus : la vraie carte vient de l'appelant. */
-@Composable
-private fun CarteApercu() {
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surfaceContainer)
-            .semantics { contentDescription = "Carte : position d'Inès" },
-    ) {
-        Icon(
-            CocoIcons.Repere,
-            contentDescription = null,
-            tint = CocooningTheme.cocoon.sos,
-            modifier = Modifier.size(40.dp),
-        )
-    }
-}
 
 @Composable
 private fun ApercuAlerte(alerte: AlerteSosRecue, avecCarte: Boolean = true) {
@@ -543,7 +543,7 @@ private fun ApercuAlerte(alerte: AlerteSosRecue, avecCarte: Boolean = true) {
             onAppeler112 = {},
             onJaiVu = {},
             onFermer = {},
-            carte = if (avecCarte) ({ CarteApercu() }) else null,
+            afficherCarte = avecCarte,
         )
     }
 }

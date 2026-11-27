@@ -55,12 +55,17 @@ sequenceDiagram
     participant A as Personne en danger
     participant S as Serveur
     participant B as Partenaire
-    A->>A: Appui long de 2 secondes
+    A->>A: Appui long de 3 secondes
+    A->>A: Compte à rebours de 5 secondes, annulable
     A->>S: Alerte + position GPS
     S->>B: Notification prioritaire
-    B->>B: Alarme sonore plein écran
+    B->>B: Alarme sonore plein écran, carte de la position
+    B->>S: « J'ai vu » coupe la sonnerie, l'alerte reste affichée
+    S->>A: Alerte vue
     B->>A: Appel ou itinéraire vers la position
 ```
+
+L'appui long de 3 secondes puis les 5 secondes annulables évitent les fausses alertes. La carte utilise osmdroid et les tuiles OpenStreetMap, sans services Google : elle marche aussi sur /e/OS.
 
 Si le réseau manque, un SMS de secours prend le relais. Un téléphone en silence total reste une limite d'Android que personne ne peut contourner.
 
@@ -73,6 +78,7 @@ Si le réseau manque, un SMS de secours prend le relais. Un téléphone en silen
 | Hébergement | Conteneur LXC sur mon Proxmox, derrière Nginx Proxy Manager et Cloudflare |
 | Notifications | FCM, ou UnifiedPush pour un téléphone sans services Google |
 | Design | Thème Lavande poudrée, polices Baloo 2 et Montserrat, contrastes AA |
+| Carte | osmdroid avec les données OpenStreetMap, sans services Google |
 
 ## Où j'en suis
 
@@ -118,4 +124,13 @@ Les idées sont bienvenues dans les issues. Le travail passe par des branches, j
 
 ## Licence
 
-À définir.
+À définir pour le code.
+
+Les polices embarquées dans `core/designsystem/src/main/res/font/` sont sous licence SIL Open Font License 1.1 :
+
+| Police | Auteurs | Licence |
+|---|---|---|
+| Baloo 2 | The Baloo 2 Project Authors | [`core/designsystem/licences/OFL-Baloo2.txt`](core/designsystem/licences/OFL-Baloo2.txt) |
+| Montserrat | The Montserrat Project Authors | [`core/designsystem/licences/OFL-Montserrat.txt`](core/designsystem/licences/OFL-Montserrat.txt) |
+
+La carte de l'alerte S.O.S utilise [osmdroid](https://github.com/osmdroid/osmdroid) (licence Apache 2.0) et les données © contributeurs OpenStreetMap (licence ODbL), mention affichée sur la carte.

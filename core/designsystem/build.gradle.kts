@@ -33,6 +33,9 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
 
+    // Carte de l'alerte S.O.S reçue : tuiles OpenStreetMap, sans services Google (compatible /e/OS).
+    implementation("org.osmdroid:osmdroid-android:6.1.20")
+
     androidTestImplementation(composeBom)
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
