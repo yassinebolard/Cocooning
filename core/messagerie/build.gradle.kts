@@ -33,6 +33,7 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     implementation(project(":core:securite"))
+    implementation(project(":core:protocole"))
     ksp(libs.androidx.room.compiler)
     api(libs.kotlinx.coroutines.core)
 
