@@ -46,6 +46,8 @@ data class ActionsAccueil(
  * Accueil branché à son [AccueilViewModel].
  *
  * @param margeBas place laissée sous le contenu pour le bouton S.O.S flottant.
+ * @param rappel bloc fourni par l'appli sous la salutation (rappel de sauvegarde), vide s'il n'a rien à dire.
+ * @param piedDePage bloc fourni par l'appli en bas de l'accueil (accès à la sauvegarde).
  */
 @Composable
 fun AccueilRoute(
@@ -53,6 +55,8 @@ fun AccueilRoute(
     actions: ActionsAccueil,
     modifier: Modifier = Modifier,
     margeBas: PaddingValues = PaddingValues(),
+    rappel: @Composable () -> Unit = {},
+    piedDePage: @Composable () -> Unit = {},
 ) {
     val etat by viewModel.etat.collectAsStateWithLifecycle()
     EcranAccueil(
@@ -61,6 +65,8 @@ fun AccueilRoute(
         onBasculerRegles = { viewModel.basculerRegles(actions.onAnnoncer) },
         modifier = modifier,
         margeBas = margeBas,
+        rappel = rappel,
+        piedDePage = piedDePage,
     )
 }
 
@@ -72,11 +78,14 @@ fun EcranAccueil(
     onBasculerRegles: () -> Unit,
     modifier: Modifier = Modifier,
     margeBas: PaddingValues = PaddingValues(),
+    rappel: @Composable () -> Unit = {},
+    piedDePage: @Composable () -> Unit = {},
 ) {
     when (etat) {
         AccueilUiState.Chargement -> LoadingState(modifier.padding(Dimens.Space5))
         is AccueilUiState.Erreur -> ErrorState(message = etat.message, modifier = modifier.padding(Dimens.Space5))
-        is AccueilUiState.Pret -> ContenuAccueil(etat.donnees, actions, onBasculerRegles, modifier, margeBas)
+        is AccueilUiState.Pret ->
+            ContenuAccueil(etat.donnees, actions, onBasculerRegles, modifier, margeBas, rappel, piedDePage)
     }
 }
 
@@ -87,6 +96,8 @@ private fun ContenuAccueil(
     onBasculerRegles: () -> Unit,
     modifier: Modifier,
     margeBas: PaddingValues,
+    rappel: @Composable () -> Unit,
+    piedDePage: @Composable () -> Unit,
 ) {
     val scheme = MaterialTheme.colorScheme
     Column(
@@ -110,6 +121,8 @@ private fun ContenuAccueil(
                 color = scheme.onSurfaceVariant,
             )
         }
+
+        rappel()
 
         donnees.cycle?.let { cycle ->
             BlocCycle(cycle, onOuvrirCycle = actions.onOuvrirCycle, onBasculerRegles = onBasculerRegles)
@@ -174,6 +187,8 @@ private fun ContenuAccueil(
         if (donnees.notesEpinglees.isNotEmpty()) {
             NotesEpinglees(donnees.notesEpinglees, onOuvrirNotes = actions.onOuvrirNotes)
         }
+
+        piedDePage()
     }
 }
 

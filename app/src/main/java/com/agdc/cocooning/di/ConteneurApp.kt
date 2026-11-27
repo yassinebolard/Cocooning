@@ -12,6 +12,10 @@ import fr.cocooning.core.securite.sauvegarde.SauvegardeCocooning
 import fr.cocooning.feature.accueil.AccueilRepository
 import fr.cocooning.feature.accueil.AccueilRepositoryLocal
 import fr.cocooning.feature.cycle.DependancesCycle
+import fr.cocooning.feature.sauvegarde.CoffreCocooning
+import fr.cocooning.feature.sauvegarde.DependancesSauvegarde
+import fr.cocooning.feature.sauvegarde.FichiersAndroid
+import fr.cocooning.feature.sauvegarde.SuiviSauvegardePreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -34,12 +38,28 @@ class ConteneurApp(context: Context) {
         PreferencesChiffrees.ouvrir(appContext, NOM_PREFERENCES, anciennesPreferences = emptyList())
     }
 
-    /** Sauvegarde pour le changement de téléphone (EF-CPT-08). Pas encore d'écran pour la lancer. */
-    val sauvegarde: SauvegardeCocooning by lazy {
+    /**
+     * Sauvegarde pour le changement de téléphone (EF-CPT-08). L'accès à la base reste paresseux :
+     * au premier lancement, la restauration remplace le fichier avant que Room ne l'ouvre.
+     */
+    private val sauvegarde: SauvegardeCocooning by lazy {
         SauvegardeCocooning(
             appContext,
-            bases = mapOf(BaseCycle.NOM to BaseCycle.pourSauvegarde(baseCycle)),
+            bases = mapOf(BaseCycle.NOM to { BaseCycle.pourSauvegarde(baseCycle)() }),
             preferences = mapOf(NOM_PREFERENCES to preferences),
+        )
+    }
+
+    /** Ce dont les écrans de sauvegarde ont besoin. */
+    val dependancesSauvegarde: DependancesSauvegarde by lazy {
+        DependancesSauvegarde(
+            coffre = CoffreCocooning(sauvegarde),
+            fichiers = FichiersAndroid(appContext),
+            suivi = SuiviSauvegardePreferences(
+                preferences,
+                // Une installation mise à jour qui a déjà des données ne revoit pas l'accueil.
+                donneesDejaPresentes = { appContext.getDatabasePath(BaseCycle.NOM).exists() },
+            ),
         )
     }
 

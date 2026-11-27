@@ -52,6 +52,12 @@ import fr.cocooning.feature.cycle.CycleCle
 import fr.cocooning.feature.cycle.CycleRoute
 import fr.cocooning.feature.cycle.CycleViewModel
 import fr.cocooning.feature.cycle.ReglagesCycleCle
+import fr.cocooning.feature.sauvegarde.ExportRoute
+import fr.cocooning.feature.sauvegarde.ExportViewModel
+import fr.cocooning.feature.sauvegarde.LienSauvegarde
+import fr.cocooning.feature.sauvegarde.RappelSauvegardeRoute
+import fr.cocooning.feature.sauvegarde.RappelViewModel
+import fr.cocooning.feature.sauvegarde.SauvegardeCle
 import kotlinx.coroutines.launch
 
 /**
@@ -91,6 +97,9 @@ fun CocooningApp(conteneur: ConteneurApp) {
         onOuvrirNotes = { navigation.ouvrirOnglet(NotesCle) },
         onAnnoncer = annoncer,
     )
+
+    val dependancesSauvegarde = conteneur.dependancesSauvegarde
+    val ouvrirSauvegarde = { navigation.ouvrir(SauvegardeCle) }
 
     val dependancesCycle = conteneur.dependancesCycle
     val actionsCycle = ActionsCycle(
@@ -139,7 +148,25 @@ fun CocooningApp(conteneur: ConteneurApp) {
             entryProvider = entryProvider {
                 entry<AccueilCle> {
                     val vm: AccueilViewModel = viewModel(factory = AccueilViewModel.fabrique(conteneur.accueil))
-                    AccueilRoute(viewModel = vm, actions = actionsAccueil, margeBas = margeSos)
+                    AccueilRoute(
+                        viewModel = vm,
+                        actions = actionsAccueil,
+                        margeBas = margeSos,
+                        rappel = {
+                            val rappel: RappelViewModel = viewModel(factory = RappelViewModel.fabrique(dependancesSauvegarde))
+                            RappelSauvegardeRoute(viewModel = rappel, onSauvegarder = ouvrirSauvegarde)
+                        },
+                        piedDePage = { LienSauvegarde(onSauvegarder = ouvrirSauvegarde) },
+                    )
+                }
+                entry<SauvegardeCle> {
+                    val vm: ExportViewModel = viewModel(factory = ExportViewModel.fabrique(dependancesSauvegarde))
+                    ExportRoute(
+                        viewModel = vm,
+                        onTermine = { navigation.retour() },
+                        onRetour = { navigation.retour() },
+                        margeBas = margeSos,
+                    )
                 }
                 entry<MessagesCle> {
                     OngletAVenir(

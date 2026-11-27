@@ -30,6 +30,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.error
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import fr.cocooning.designsystem.CocoPreviews
@@ -44,6 +45,8 @@ import fr.cocooning.designsystem.icons.CocoIcons
  * @param libelle toujours visible, jamais remplacé par un simple texte indicatif.
  * @param erreur message qui dit quoi corriger (« Numéro incomplet : il manque 4 chiffres. »).
  *   L'appelant ne le fournit qu'après que l'utilisateur a quitté le champ.
+ * @param masque remplace chaque caractère par un point (phrase secrète). L'appelant propose
+ *   un bouton pour l'afficher, et choisit un clavier sans suggestions.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,7 +61,9 @@ fun CocoTextField(
     singleLine: Boolean = true,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
+    masque: Boolean = false,
 ) {
+    val transformation = if (masque) PasswordVisualTransformation() else VisualTransformation.None
     val interactions = remember { MutableInteractionSource() }
     val enErreur = erreur != null
     val scheme = MaterialTheme.colorScheme
@@ -97,6 +102,7 @@ fun CocoTextField(
             keyboardOptions = keyboardOptions,
             keyboardActions = keyboardActions,
             singleLine = singleLine,
+            visualTransformation = transformation,
             interactionSource = interactions,
             decorationBox = { champ ->
                 OutlinedTextFieldDefaults.DecorationBox(
@@ -104,7 +110,7 @@ fun CocoTextField(
                     innerTextField = champ,
                     enabled = enabled,
                     singleLine = singleLine,
-                    visualTransformation = VisualTransformation.None,
+                    visualTransformation = transformation,
                     interactionSource = interactions,
                     isError = enErreur,
                     trailingIcon = if (enErreur) {

@@ -59,6 +59,13 @@ object SauvegardeChiffree {
     private const val TAILLE_CLE = 32
     private const val ENTREES_MAX = 1_000
 
+    /**
+     * Vrai si [debut] commence comme une sauvegarde Cocooning. Ne vérifie ni la phrase ni
+     * l'intégrité : sert seulement à refuser tout de suite un fichier choisi par erreur.
+     */
+    fun estUneSauvegarde(debut: ByteArray): Boolean =
+        debut.size >= MAGIQUE.size && debut.copyOfRange(0, MAGIQUE.size).contentEquals(MAGIQUE)
+
     fun sceller(
         contenu: ContenuSauvegarde,
         phrase: CharSequence,

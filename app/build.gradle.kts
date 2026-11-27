@@ -55,6 +55,7 @@ dependencies {
     implementation(project(":core:designsystem"))
     implementation(project(":feature:accueil"))
     implementation(project(":feature:cycle"))
+    implementation(project(":feature:sauvegarde"))
     implementation(project(":core:cycle"))
     implementation(project(":core:securite"))
     testImplementation(libs.junit)

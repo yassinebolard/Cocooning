@@ -29,6 +29,7 @@ include(":core:cycle")
 include(":core:securite")
 include(":feature:cycle")
 include(":feature:accueil")
+include(":feature:sauvegarde")
  
 // Prototype S.O.S jetable du jalon J3 (voir docs/prototype-sos.md).
 include(":prototype:sos")

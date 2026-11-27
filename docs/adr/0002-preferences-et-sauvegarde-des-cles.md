@@ -53,5 +53,17 @@ Cocooning prévu par EF-CPT-08 n'existe pas encore.
   sans limite d'essais. Le texte de l'écran de création doit le dire clairement.
 - Phrase oubliée : la sauvegarde est perdue, personne ne peut la rouvrir. À dire aussi.
 - Bouncy Castle ajoute du poids à l'APK tant que R8 n'est pas activé en version publiée.
-- Restent : écrans de création de la phrase (avec indicateur), d'export et de restauration au
-  premier lancement ; rappel d'export ; envoi quotidien au serveur ; transfert par QR code (EF-CPT-09).
+- Écrans (module `:feature:sauvegarde`) :
+  - Création de la phrase et export, depuis l'accueil : phrase saisie deux fois, masquée par
+    défaut, clavier sans suggestions ; indicateur de robustesse en trois paliers doublé d'un texte ;
+    encadré « Phrase oubliée, sauvegarde perdue » et case à cocher obligatoire ; fichier
+    `cocooning-sauvegarde-AAAA-MM-JJ.cocooning` rangé par le sélecteur de fichiers d'Android. La
+    phrase n'est jamais enregistrée et chaque export la redemande.
+  - Restauration au premier lancement seulement : un écran d'accueil propose « Commencer » ou
+    « Restaurer une sauvegarde ». Un téléphone qui a déjà une base ne le voit jamais (mise à jour
+    sans effet sur les données). Fichier refusé tout de suite s'il n'est pas une sauvegarde ; phrase
+    fausse signalée sur le champ, sans rien modifier ; puis redémarrage de l'appli.
+  - Rappel d'export : carte sur l'accueil sans sauvegarde, puis 30 jours après la dernière ;
+    « Plus tard » la cache 7 jours. Lien permanent « Sauvegarder mes données » en bas de l'accueil
+    en attendant un écran de réglages.
+- Restent : envoi quotidien au serveur ; transfert par QR code (EF-CPT-09) ; R8 en version publiée.
