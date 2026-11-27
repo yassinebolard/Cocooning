@@ -17,6 +17,13 @@ class SauvegardeChiffreeTest {
     )
 
     @Test
+    fun unFichierScelleEstReconnuEtUnAutreNon() {
+        assertTrue(SauvegardeChiffree.estUneSauvegarde(SauvegardeChiffree.sceller(contenu, phrase, rapide)))
+        assertFalse(SauvegardeChiffree.estUneSauvegarde("PK pas une sauvegarde".toByteArray()))
+        assertFalse(SauvegardeChiffree.estUneSauvegarde(ByteArray(3)))
+    }
+
+    @Test
     fun allerRetourAvecLaBonnePhrase() {
         val fichier = SauvegardeChiffree.sceller(contenu, phrase, rapide)
         val relu = SauvegardeChiffree.ouvrir(fichier, phrase)

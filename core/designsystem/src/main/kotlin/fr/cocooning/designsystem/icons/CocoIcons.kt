@@ -306,4 +306,16 @@ object CocoIcons {
     val Batterie: ImageVector by lazy {
         iconeSvg("Batterie", "M3 7h15v10H3z", "M21 10v4")
     }
+
+    // Icônes de la sauvegarde des clés
+
+    /** Sauvegarde chiffrée, phrase de récupération : cadenas. */
+    val Cadenas: ImageVector by lazy {
+        iconeSvg("Cadenas", "M5 11h14v10H5z", "M8 11V7a4 4 0 0 1 8 0v4", "M12 15v2")
+    }
+
+    /** Fichier exporté ou à restaurer. */
+    val Fichier: ImageVector by lazy {
+        iconeSvg("Fichier", "M6 3h8l4 4v14H6z", "M14 3v4h4")
+    }
 }
