@@ -37,3 +37,4 @@ google-services.json
 # Serveur : vraie configuration (seul le modèle *.example est versionné, ENF-SEC-11) et données locales
 config/server.conf
 donnees/
+config/cocooning.properties

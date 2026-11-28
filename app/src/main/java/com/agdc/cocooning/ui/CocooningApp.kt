@@ -52,6 +52,8 @@ import fr.cocooning.feature.cycle.CycleCle
 import fr.cocooning.feature.cycle.CycleRoute
 import fr.cocooning.feature.cycle.CycleViewModel
 import fr.cocooning.feature.cycle.ReglagesCycleCle
+import fr.cocooning.feature.messages.MessagesRoute
+import fr.cocooning.feature.messages.MessagesViewModel
 import fr.cocooning.feature.sauvegarde.ExportRoute
 import fr.cocooning.feature.sauvegarde.ExportViewModel
 import fr.cocooning.feature.sauvegarde.LienSauvegarde
@@ -169,9 +171,11 @@ fun CocooningApp(conteneur: ConteneurApp) {
                     )
                 }
                 entry<MessagesCle> {
-                    OngletAVenir(
-                        destination = destinations[1],
-                        message = "Ta messagerie chiffrée avec ${conteneur.prenomPartenaire} arrive bientôt.",
+                    val vm: MessagesViewModel = viewModel(factory = MessagesViewModel.fabrique(conteneur.messagerie))
+                    MessagesRoute(
+                        viewModel = vm,
+                        prenomPartenaire = conteneur.prenomPartenaire,
+                        onAnnoncer = annoncer,
                         margeBas = margeSos,
                     )
                 }
