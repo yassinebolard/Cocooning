@@ -35,9 +35,13 @@ include(":core:cycle")
 include(":core:securite")
 include(":core:messagerie")
 include(":core:chiffrement")
+include(":core:protocole")
 include(":feature:cycle")
 include(":feature:accueil")
 include(":feature:sauvegarde")
+
+// Serveur Cocooning (Ktor sur la JVM), déployé sur le Proxmox (cahier des charges section 9.3).
+include(":backend")
  
 // Prototype S.O.S jetable du jalon J3 (voir docs/prototype-sos.md).
 include(":prototype:sos")

@@ -1,0 +1,106 @@
+# Configuration du serveur Cocooning (ENF-CONF-01 et 02 du cahier des charges).
+#
+# Copier ce fichier en config/server.conf (ignoré par git) et l'adapter. Toute clé absente garde
+# la valeur indiquée ici, qui est aussi la valeur par défaut du serveur. Chaque valeur peut venir
+# d'une variable d'environnement : écrire « cle = ${?NOM_DE_VARIABLE} » sous la valeur par défaut.
+# Le chemin du fichier peut être donné en argument ou par la variable COCOONING_CONFIG.
+#
+# Durées : 30s, 15m, 24h, 30d. Tailles : 256KiB, 8MiB, 60GB (ou un nombre d'octets).
+# Aucun secret ne doit être écrit dans le modèle : seulement dans config/server.conf ou
+# dans l'environnement du service systemd.
+
+cocooning {
+
+  ecoute {
+    # Adresse d'écoute. 127.0.0.1 en local ; l'adresse du conteneur derrière Nginx Proxy Manager.
+    hote = "127.0.0.1"
+    # Port HTTP, sans TLS : le TLS est fait par Nginx Proxy Manager (ENF-SEC-05).
+    port = 8080
+    # Vrai derrière le proxy : l'adresse réelle du client est lue dans X-Forwarded-For
+    # (pour la limitation des requêtes). À laisser faux si le serveur est joignable en direct.
+    derriereProxy = false
+  }
+
+  stockage {
+    # Base SQLite (mode WAL). Métadonnées et octets chiffrés seulement.
+    base = "donnees/cocooning.db"
+    # Dossier des médias chiffrés : le disque virtuel de 60 Go (section 9.3).
+    medias = "donnees/medias"
+  }
+
+  espace {
+    # Membres par espace. 2 en V1 (un couple) ; le modèle en accepte plus (ENF-EVO-01).
+    membresMax = 2
+    # Durée de validité d'un code d'invitation à usage unique (EF-CPT-02).
+    validiteInvitation = 24h
+  }
+
+  auth {
+    # Durée de vie d'un jeton d'accès (ENF-SEC-06).
+    validiteJeton = 15m
+    # Délai pour signer un défi d'authentification.
+    validiteDefi = 60s
+  }
+
+  messages {
+    # Un message jamais relevé est effacé après cette durée (ENF-RGPD-04).
+    conservation = 30d
+    # Taille maximale d'un message chiffré pour un appareil.
+    tailleMaxEnveloppe = 256KiB
+    # Appareils destinataires au plus par message.
+    destinatairesMax = 20
+    # Messages au plus par relève.
+    releveMax = 100
+  }
+
+  cles {
+    # Pré-clés à usage unique gardées au plus par appareil (l'appli en publie 100).
+    preClesMaxParAppareil = 200
+  }
+
+  medias {
+    # Taille maximale d'un média chiffré : 100 Mo de vidéo (section 10) plus le chiffrement.
+    tailleMax = 110000000
+    # Taille d'un morceau d'envoi, sous la limite de 100 Mo par requête de Cloudflare.
+    tailleMorceau = 8MiB
+    # Place réservée aux médias, et seuils d'alerte et de blocage des envois (section 10).
+    quota = 60GB
+    seuilAlerte = 0.80
+    seuilBlocage = 0.95
+    # Suppression après réception par tous les destinataires (ENF-RGPD-04).
+    conservationApresReception = 30d
+    # Suppression dans tous les cas après cette durée, même jamais téléchargé.
+    conservationMax = 90d
+    # Envoi commencé mais jamais terminé : supprimé après cette durée.
+    abandonEnvoi = 24h
+  }
+
+  reveil {
+    ntfy {
+      # Adresse du serveur ntfy auto-hébergé (ENF-EVO-03), vide pour ne pas réveiller par ntfy.
+      url = ""
+      # Jeton d'accès ntfy, s'il en faut un. Secret : à donner par l'environnement.
+      jeton = ""
+      jeton = ${?COCOONING_NTFY_JETON}
+    }
+  }
+
+  limites {
+    # Requêtes par minute et par appareil authentifié.
+    requetesParMinute = 300
+    # Créations d'espace, arrivées et remplacements d'appareil par heure et par adresse IP.
+    inscriptionsParHeure = 10
+  }
+
+  tempsReel {
+    # Taille maximale d'un éphémère chiffré (« en train d'écrire »).
+    ephemereTailleMax = 4KiB
+    # Intervalle des pings WebSocket, pour garder la connexion ouverte à travers le proxy.
+    intervallePing = 30s
+  }
+
+  purge {
+    # Fréquence de la purge des messages, médias, jetons et invitations expirés.
+    intervalle = 1h
+  }
+}
