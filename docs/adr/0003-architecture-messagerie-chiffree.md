@@ -200,9 +200,12 @@ Module `:core:chiffrement` avec libsignal 0.108.7, licence AGPL-3.0 (`LICENSE` �
 
 ## Reste
 
-1. Brancher `:core:chiffrement` dans l'appli : desugaring, exclusions de l'APK et NDK (voir
-   « Poids »), mesure de la taille de l'APK.
-2. Format Protobuf du contenu en clair (section 4) entre `:core:messagerie` et le chiffrement.
+1. Fait le 28/11/2026 : `:core:chiffrement` branché dans l'appli (desugaring, exclusions,
+   arm64-v8a et x86_64). Avec le NDK 28.2.13676358 installé, les symboles sont retirés :
+   `libsignal_jni.so` passe de 125 à 9,6 Mo (arm64) et l'APK debug de 298,6 à 70,4 Mo, dont
+   l'essentiel est le code non optimisé du debug. Sans NDK, la compilation marche mais ne retire
+   rien : il faut l'installer sur tout poste qui produit un APK à installer.
+2. Fait : format Protobuf du contenu en clair (ADR 0004).
 3. Serveur Ktor : comptes et appareils, paquets de pré-clés, boîtes aux lettres, WebSocket,
    blobs par morceaux, purge à 30 jours.
 4. Transport côté appli : file de sortie (réactions, suppressions, accusés), WorkManager,
