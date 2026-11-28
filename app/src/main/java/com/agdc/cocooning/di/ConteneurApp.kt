@@ -16,7 +16,23 @@ import fr.cocooning.feature.sauvegarde.CoffreCocooning
 import fr.cocooning.feature.sauvegarde.DependancesSauvegarde
 import fr.cocooning.feature.sauvegarde.FichiersAndroid
 import fr.cocooning.feature.sauvegarde.SuiviSauvegardePreferences
+import com.agdc.cocooning.BuildConfig
+import fr.cocooning.core.chiffrement.MoteurSignal
+import fr.cocooning.core.chiffrement.room.BaseSignal
+import fr.cocooning.core.chiffrement.room.StockageSignalRoom
+import fr.cocooning.core.messagerie.domaine.IdMembre
+import fr.cocooning.core.messagerie.donnees.MessagerieRepository
+import fr.cocooning.core.messagerie.donnees.MessagerieRepositoryLocal
+import fr.cocooning.core.messagerie.donnees.room.BaseMessagerie
+import fr.cocooning.core.messagerie.donnees.room.SourceMessagesRoom
+import fr.cocooning.core.reseau.ApiKtor
+import fr.cocooning.core.reseau.CleAppareilKeystore
+import fr.cocooning.core.reseau.MagasinCompteChiffre
+import fr.cocooning.core.reseau.ServiceMessagerie
+import fr.cocooning.core.reseau.ServiceMessagerieReseau
+import fr.cocooning.core.reseau.Synchroniseur
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -45,7 +61,11 @@ class ConteneurApp(context: Context) {
     private val sauvegarde: SauvegardeCocooning by lazy {
         SauvegardeCocooning(
             appContext,
-            bases = mapOf(BaseCycle.NOM to { BaseCycle.pourSauvegarde(baseCycle)() }),
+            // Jamais BaseSignal : les clés de messagerie ne quittent pas le téléphone (ADR 0003).
+            bases = mapOf(
+                BaseCycle.NOM to { BaseCycle.pourSauvegarde(baseCycle)() },
+                BaseMessagerie.NOM to { BaseMessagerie.pourSauvegarde(baseMessagerie)() },
+            ),
             preferences = mapOf(NOM_PREFERENCES to preferences),
         )
     }
@@ -62,6 +82,35 @@ class ConteneurApp(context: Context) {
             ),
         )
     }
+
+    private val baseMessagerie: BaseMessagerie by lazy { BaseMessagerie.creer(appContext) }
+    private val baseSignal: BaseSignal by lazy { BaseSignal.creer(appContext) }
+    private val compte by lazy { MagasinCompteChiffre(preferences) }
+
+    /** Dépôt des messages, créé une fois le membre connu (après l'inscription). */
+    private var depotMessages: MessagerieRepository? = null
+
+    private val synchroniseur: Synchroniseur by lazy {
+        Synchroniseur(
+            api = ApiKtor.pour(BuildConfig.SERVEUR) { android.util.Log.w("Cocooning", "Serveur injoignable", it) },
+            cle = CleAppareilKeystore(),
+            compte = compte,
+            moteur = MoteurSignal(StockageSignalRoom(baseSignal)),
+            fournirDepot = ::depot,
+        )
+    }
+
+    private val verrouDepot = kotlinx.coroutines.sync.Mutex()
+
+    private suspend fun depot(): MessagerieRepository = verrouDepot.withLock {
+        depotMessages ?: run {
+            val membre = compte.lire() ?: error("Téléphone pas encore inscrit")
+            MessagerieRepositoryLocal(SourceMessagesRoom(baseMessagerie), IdMembre(membre.membre)).also { depotMessages = it }
+        }
+    }
+
+    /** Messagerie chiffrée de bout en bout avec le serveur Cocooning (ADR 0003 et 0004). */
+    val messagerie: ServiceMessagerie by lazy { ServiceMessagerieReseau(synchroniseur, compte, ::depot) }
 
     val cycle: CycleRepository by lazy { CycleRepositoryLocal(SourceCyclesRoom(baseCycle)) }
 

@@ -40,6 +40,7 @@ include(":core:reseau")
 include(":feature:cycle")
 include(":feature:accueil")
 include(":feature:sauvegarde")
+include(":feature:messages")
 
 // Serveur Cocooning (Ktor sur la JVM), déployé sur le Proxmox (cahier des charges section 9.3).
 include(":backend")

@@ -76,7 +76,11 @@ val jsonApi = Json {
  * [ApiCocooning] par HTTP avec Ktor. [client] reçoit l'adresse du serveur et le JSON ;
  * l'appli passe un client OkHttp ([creerClient]), les tests un moteur simulé.
  */
-class ApiKtor(private val client: HttpClient) : ApiCocooning {
+class ApiKtor(
+    private val client: HttpClient,
+    /** Reçoit la cause d'un échec réseau, pour le journal de l'appli (jamais de contenu). */
+    private val journal: (Throwable) -> Unit = {},
+) : ApiCocooning {
 
     override suspend fun creerEspace(demande: CreationEspace): Inscription =
         appel { client.post(CheminsApi.ESPACES) { json(demande) } }
@@ -132,6 +136,7 @@ class ApiKtor(private val client: HttpClient) : ApiCocooning {
         } catch (e: ErreurReseau) {
             throw e
         } catch (e: Exception) {
+            journal(e)
             throw ErreurReseau.HorsLigne(e)
         }
         if (!reponse.status.isSuccess()) {
@@ -147,6 +152,9 @@ class ApiKtor(private val client: HttpClient) : ApiCocooning {
     }
 
     companion object {
+        /** L'API du serveur à [adresse], avec le client de l'appli. */
+        fun pour(adresse: String, journal: (Throwable) -> Unit = {}): ApiCocooning = ApiKtor(creerClient(adresse), journal)
+
         /** Client de l'appli : OkHttp, TLS du système (ENF-SEC-05, pas d'épinglage), JSON de l'API. */
         fun creerClient(adresse: String): HttpClient = HttpClient(io.ktor.client.engine.okhttp.OkHttp) {
             expectSuccess = false

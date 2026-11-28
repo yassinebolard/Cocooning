@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-   Sauvegarde automatique d'Android (Android 11 et moins). Les bases chiffrées sont exclues :
-   leur clé vit dans le Keystore du téléphone et n'est jamais sauvegardée, une copie restaurée
-   ailleurs serait illisible. Le changement de téléphone passera par EF-CPT-08.
+   Sauvegarde automatique d'Android (Android 11 et moins). Toutes les bases sont exclues (cycle,
+   messagerie, clés Signal) : leur clé vit dans le Keystore du téléphone et n'est jamais
+   sauvegardée. Le changement de téléphone passe par EF-CPT-08.
 -->
 <full-backup-content>
-    <exclude domain="database" path="cocooning_cycle.db" />
-    <exclude domain="database" path="cocooning_cycle.db-wal" />
-    <exclude domain="database" path="cocooning_cycle.db-shm" />
+    <exclude domain="database" path="." />
 </full-backup-content>

@@ -1,0 +1,10 @@
+# Configuration de l'application Cocooning (ENF-CONF-01 et 02 du cahier des charges).
+#
+# Copier ce fichier en config/cocooning.properties (ignoré par git) pour changer une valeur.
+# Lu par Gradle à la compilation et injecté dans BuildConfig : recompiler après un changement.
+
+# Adresse du serveur Cocooning, sans barre finale.
+# Par défaut, le serveur lancé sur le PC (./gradlew :backend:run), relié au téléphone ou à l'émulateur
+# par « adb reverse tcp:8080 tcp:8080 » (10.0.2.2 est souvent bloqué par le pare-feu de Windows).
+# Sur le Proxmox : l'adresse publique en https derrière Nginx Proxy Manager et Cloudflare.
+serveur.adresse=http://localhost:8080

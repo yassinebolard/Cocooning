@@ -66,11 +66,11 @@ class Synchroniseur(
     private val compte: MagasinCompte,
     private val moteur: MoteurSignal,
     /** Le dépôt dépend du membre, connu seulement après l'inscription : il est fourni à la demande. */
-    private val fournirDepot: () -> MessagerieRepository,
+    private val fournirDepot: suspend () -> MessagerieRepository,
     private val horloge: Clock = Clock.systemUTC(),
     private val contexte: CoroutineContext = Dispatchers.IO,
 ) {
-    private val depot: MessagerieRepository get() = fournirDepot()
+    private suspend fun depot(): MessagerieRepository = fournirDepot()
     private val verrou = Mutex()
     private var jeton: Pair<String, Long>? = null
 
@@ -125,6 +125,24 @@ class Synchroniseur(
 
     suspend fun espace(): EspaceApi = operation { authentifie { api.espace(it) } }
 
+    /**
+     * Les autres membres de l'espace, destinataires d'un message. Lus sur le serveur quand il
+     * répond, sinon pris parmi les appareils déjà vus : on peut écrire hors ligne.
+     */
+    suspend fun partenaires(): List<IdMembre> = operation {
+        val moi = checkNotNull(compte.lire()) { "Téléphone pas encore inscrit" }.membre
+        val enLigne = try {
+            val espace = authentifie { api.espace(it) }
+            val changees = mutableSetOf<IdMembre>()
+            espace.membres.filter { it.id != moi }.onEach { m ->
+                if (m.appareils.isNotEmpty()) noterAppareils(IdMembre(m.id), m.appareils.map { it.id }, remplacer = true, changees)
+            }.map { IdMembre(it.id) }
+        } catch (e: ErreurReseau.HorsLigne) {
+            null
+        }
+        enLigne ?: compte.appareilsConnus().keys.filter { it != moi }.map(::IdMembre)
+    }
+
     // Clés
 
     /** Publie les clés Signal si le moteur en a de nouvelles (première fois, renouvellement, recharge). */
@@ -161,7 +179,7 @@ class Synchroniseur(
      * Une coupure réseau arrête la file sans rien perdre : les messages restent en attente.
      */
     private suspend fun envoyerEnAttente(): RapportSynchro {
-        val enAttente = depot.aEnvoyer()
+        val enAttente = depot().aEnvoyer()
         if (enAttente.isEmpty()) return RapportSynchro()
         var espace = authentifie { api.espace(it) }
         var envoyes = 0
@@ -192,10 +210,10 @@ class Synchroniseur(
                 false
             }
             if (resultat) {
-                depot.marquerEnvoye(message.id)
+                depot().marquerEnvoye(message.id)
                 envoyes++
             } else {
-                depot.marquerEchec(message.id)
+                depot().marquerEchec(message.id)
                 enEchec++
             }
         }
@@ -266,7 +284,7 @@ class Synchroniseur(
                     if (dechiffre.identite == ChangementIdentite.Changee) changees += auteur
                     noterAppareils(auteur, listOf(recu.expediteurAppareil), remplacer = false, changees)
                     val evenement = FormatMessages.lire(dechiffre.clair, auteur)
-                    val resultats = depot.appliquer(evenement)
+                    val resultats = depot().appliquer(evenement)
                     if (evenement is EvenementRecu.NouveauMessage && resultats.all { it is ResultatMessagerie.Fait }) {
                         recus++
                         val cle = evenement.message.conversation to auteur
