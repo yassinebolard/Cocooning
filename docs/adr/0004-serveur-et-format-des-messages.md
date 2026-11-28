@@ -1,7 +1,7 @@
 # ADR 0004 : serveur Cocooning et format des messages
 
-- Statut : **proposée** le 27/11/2026. Une question attend la MOA : comptes sans e-mail ni mot
-  de passe (écart avec EF-CPT-01), recommandé et déjà codé.
+- Statut : **acceptée** par la MOA (Yassine) le 28/11/2026 : comptes sans e-mail ni mot de passe
+  (EF-CPT-01 modifiée en conséquence dans le cahier des charges).
 - Exigences : EF-CPT-02, 03, 09 ; EF-MSG-01, 07, 10 ; ENF-SEC-05 à 07 et 11 ; ENF-RGPD-04 ;
   ENF-CONF-01 à 03 ; ENF-EVO-01 à 03.
 - Code : `:core:protocole` (Kotlin pur, partagé), `:backend` (Ktor), `FormatMessages` dans
@@ -33,5 +33,5 @@
 
 ## Reste
 
-Réponse de la MOA sur les comptes ; FCM côté serveur ; transport côté appli (relève, envoi,
+FCM côté serveur ; secret de récupération dans le fichier de sauvegarde (EF-CPT-08) ; transport côté appli (relève, envoi,
 WorkManager) ; déploiement systemd sur le LXC ; montée de Kotlin puis de Ktor.
